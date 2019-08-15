@@ -1,0 +1,7 @@
+[package]
+name = "async-coap"
+version = "0.0.0"
+authors = ["Robert Quattlebaum <rquattle@google.com>"]
+edition = "2018"
+
+[dependencies]
