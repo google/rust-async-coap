@@ -1,0 +1,20 @@
+[package]
+name = "async-coap-uri-macros"
+version = "0.1.0"
+authors = ["Robert Quattlebaum <rquattle@google.com>"]
+edition = "2018"
+description = "Crate providing proc-macros for the `async-coap-uri` crate."
+repository = "https://github.com/google/rust-async-coap"
+documentation = "https://docs.rs/async-coap-uri/"
+license = "Apache-2.0"
+readme = "README.md"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.15"
+quote = "0.6"
+proc-macro-hack =  "0.5"
+regex = "1.1"
+lazy_static = "1.3"

@@ -1,0 +1,31 @@
+[package]
+name = "async-coap"
+version = "0.1.0"
+authors = ["Robert Quattlebaum <rquattle@google.com>"]
+edition = "2018"
+description = "A flexible, asynchronous library for using and serving CoAP resources. Experimental."
+repository = "https://github.com/google/rust-async-coap"
+documentation = "https://docs.rs/async-coap/"
+keywords = ["async", "coap"]
+categories = ["asynchronous","network-programming"]
+readme = "../README.md"
+license = "Apache-2.0"
+
+[badges]
+travis-ci = { repository = "google/rust-async-coap" }
+maintenance = { status = "experimental" }
+
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+
+[dependencies]
+log = "0.4"
+rand = "0.6"
+num = "0.2"
+regex = "1.1"
+pin-utils = "0.1.0-alpha.4"
+futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly"] }
+futures-timer = "0.3"
+async-coap-uri = { path = "../async-coap-uri", version = "0.1.0" }

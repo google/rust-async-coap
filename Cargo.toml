@@ -1,7 +1,10 @@
-[package]
-name = "async-coap"
-version = "0.0.0"
-authors = ["Robert Quattlebaum <rquattle@google.com>"]
-edition = "2018"
-
-[dependencies]
+[workspace]
+members = [
+    "async-coap",
+    "async-coap-uri",
+	"async-coap-uri/proc-macros",
+]
+default-members = [
+    "async-coap",
+    "async-coap-uri",
+]

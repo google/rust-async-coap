@@ -1,0 +1,23 @@
+[package]
+name = "async-coap-uri"
+version = "0.1.0"
+authors = ["Robert Quattlebaum <rquattle@google.com>"]
+edition = "2018"
+description = "Crate for using and manipulating Uniform Resource Identifiers with a minimal memory footprint and strong typing."
+repository = "https://github.com/google/rust-async-coap"
+documentation = "https://docs.rs/async-coap-uri/"
+keywords = ["uri","parser","url"]
+categories = ["parser-implementations","web-programming"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+
+[dependencies]
+async-coap-uri-macros = { path = "proc-macros", version = "0.1.0" }
+regex = "1.1"
+lazy_static = "1.3"
+proc-macro-hack =  "0.5"
