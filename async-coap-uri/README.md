@@ -46,7 +46,7 @@ use async_coap_uri::prelude::*;
 
 ## License ##
 
-async-coap-uri is released under the [Apache 2.0 license](LICENSE).
+async-coap-uri is released under the [Apache 2.0 license](../LICENSE).
 
     Copyright (c) 2019 Google LLC
 

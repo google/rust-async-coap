@@ -61,7 +61,7 @@ impl AllowStdUdpSocket {
         )
     }
 
-    /// Analog to [`std::net::UdpSocket::bind`] to an instance of [`AllowStdUdpSocket`].
+    /// Analog of [`std::net::UdpSocket::bind`] for [`AllowStdUdpSocket`].
     ///
     /// If `addr` is successfully resolved, the underlying `UdpSocket` will already be
     /// configured in a non-blocking operation mode.
