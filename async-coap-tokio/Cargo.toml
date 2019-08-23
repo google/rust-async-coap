@@ -1,0 +1,21 @@
+[package]
+name = "async-coap-tokio"
+version = "0.1.0"
+authors = ["Robert Quattlebaum <rquattle@google.com>"]
+edition = "2018"
+description = "Tokio back-end for `async-coap::datagram`"
+repository = "https://github.com/google/rust-async-coap"
+documentation = "https://docs.rs/async-coap-tokio/"
+license = "Apache-2.0"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-coap = { path = "../async-coap", version = "0.1" }
+tokio-net = "0.2.0-alpha.2"
+mio = "0.6"
+futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly"] }
+
+[dev-dependencies]
+tokio = "0.2.0-alpha.2"
