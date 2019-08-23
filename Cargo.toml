@@ -3,8 +3,10 @@ members = [
     "async-coap",
     "async-coap-uri",
 	"async-coap-uri/proc-macros",
+    "async-coap-tokio",
 ]
 default-members = [
     "async-coap",
     "async-coap-uri",
+    "async-coap-tokio",
 ]

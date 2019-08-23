@@ -19,11 +19,14 @@
 //! interface for using and serving CoAP resources. You can either use the [included datagram-based
 //! back-end](datagram) or you can write your own back-end by implementing [`LocalEndpoint`].
 //!
-//! By implementing [datagram::AsyncDatagramSocket], you can use the [provided datagram-based
+//! By implementing [`datagram::AsyncDatagramSocket`], you can use the [provided datagram-based
 //! back-end](datagram) with whatever datagram-based network layer you might want, be it UDP,
-//! DTLS, or even SMS. An implementation for Rust's standard [`std::net::UdpSocket`]
-//! ([`AllowStdUdpSocket`]) is included. A [Tokio](https://tokio.rs)-based implementation is
-//! forthcoming.
+//! DTLS, or even SMS. A [Tokio](https://tokio.rs)-based `UdpSocket` implementation can be found
+//! [here](https://docs.rs/async-coap-tokio)[^AllowStdUdpSocket].
+//!
+//! [^AllowStdUdpSocket]: A naive wrapper around Rust's standard [`std::net::UdpSocket`]
+//! ([`datagram::AllowStdUdpSocket`]) is included in this crate, but it should usually be avoided
+//! in favor of better-performing options, like [`async-coap-tokio::TokioAsyncUdpSocket`].
 //!
 //! ## Design
 //!

@@ -19,6 +19,11 @@
       <sourceFolder url="file://$MODULE_DIR$/async-coap-uri/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/async-coap-uri/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/async-coap-uri/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/async-coap-tokio/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/async-coap-tokio/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/async-coap-tokio/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/async-coap-tokio/benches" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/async-coap-tokio/target" />
       <excludeFolder url="file://$MODULE_DIR$/async-coap-uri/proc-macros/target" />
       <excludeFolder url="file://$MODULE_DIR$/async-coap-uri/target" />
       <excludeFolder url="file://$MODULE_DIR$/async-coap/target" />

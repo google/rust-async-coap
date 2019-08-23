@@ -13,107 +13,62 @@
 // limitations under the License.
 //
 
-use super::*;
+use async_coap::datagram::{
+    AsyncDatagramSocket, AsyncRecvFrom, AsyncSendTo, DatagramSocketTypes, MulticastSocket,
+};
 use futures::task::Context;
-use futures::Poll;
-use futures_timer::Delay;
-use std::net::{SocketAddr, SocketAddrV4, SocketAddrV6, UdpSocket};
+use futures::{ready, Poll};
+use mio::net::UdpSocket;
+use std::net::{SocketAddr, SocketAddrV4, SocketAddrV6, ToSocketAddrs};
 use std::ops::Deref;
 use std::pin::Pin;
-use std::sync::Mutex;
-use std::time::Duration;
+use tokio_net::util::PollEvented;
 
-/// A naive wrapper around [`std::net::UdpSocket`] that implements [`AsyncDatagramSocket`].
+/// An asynchronous [`AsyncDatagramSocket`] wrapper around [`std::net::UdpSocket`] that
+/// uses [Tokio][] for the event loop.
 ///
-/// **Where possible, the use of this type should be avoided in favor of better-performing options,
-/// like [`async-coap-tokio::TokioAsyncUdpSocket`].**
+/// This type differs from [`AllowUdpSocket`] in that it provides a real asynchronous,
+/// event-driven interface instead of faking one.
 ///
-/// This can be used to allow the standard Rust [`std::net::UdpSocket`] (which doesn't provide an
-/// asynchronous API) to be used in an asynchronous fashion, similar in spirit to
-/// [`futures-preview::io::AllowStdio`].
+/// In order to use this type, you must be using [Tokio][] for your event loop.
 ///
-/// Note that by default this wrapper will block execution whenever one of the `poll` methods is
-/// called (An exception is any instance created with [`AllowStdUdpSocket::bind`]).
-/// You can *fake* true asynchronous behavior by calling `set_nonblocking(true)` or
-/// `set_read_timeout(...)`. In the case where a UDP message is not received when polled (or it
-/// times out waiting for a response), a `futures_timer::Delay` is used to schedule an appropriate
-/// duration (set via `set_async_poll_interval()`) after which it can try again. This is obviously
-/// sub-optimal, but that's the best that can be offered without a real asynchronous event loop.
+/// [`AllowUdpSocket`]: async-coap::datagram::AllowUdpSocket
+/// [Tokio]: https://tokio.rs/
 #[derive(Debug)]
-pub struct AllowStdUdpSocket(UdpSocket, Mutex<Option<Delay>>, Option<Duration>);
+pub struct TokioAsyncUdpSocket(PollEvented<UdpSocket>);
 
-impl AllowStdUdpSocket {
-    /// The default interval between polling attempts.
-    ///
-    /// This value can be overridden by [`AllowStdUdpSocket::set_async_poll_interval`].
-    const DEFAULT_ASYNC_POLL_INTERVAL: Duration = Duration::from_millis(30);
-
-    /// Upgrades the given [`std::net::UdpSocket`] to an instance of [`AllowStdUdpSocket`].
-    ///
-    /// Note that no operations are performed on `udp_socket` by this method. It is recommended
-    /// that you call [`std::net::UdpSocket::set_nonblocking`] on the socket before using this
-    /// method. See the documentation for [`AllowStdUdpSocket`] for more information.
-    pub fn from_std(udp_socket: UdpSocket) -> AllowStdUdpSocket {
-        AllowStdUdpSocket(
-            udp_socket,
-            Mutex::new(None),
-            Some(Self::DEFAULT_ASYNC_POLL_INTERVAL),
-        )
-    }
-
-    /// Analog of [`std::net::UdpSocket::bind`] for [`AllowStdUdpSocket`].
-    ///
-    /// If `addr` is successfully resolved, the underlying `UdpSocket` will already be
-    /// configured in a non-blocking operation mode.
-    pub fn bind<A>(addr: A) -> std::io::Result<AllowStdUdpSocket>
+impl TokioAsyncUdpSocket {
+    /// Analog of [`std::net::UdpSocket::bind`] for [`TokioAsyncUdpSocket`].
+    pub fn bind<A>(addr: A) -> std::io::Result<TokioAsyncUdpSocket>
     where
         A: std::net::ToSocketAddrs,
     {
-        let udp_socket = UdpSocket::bind(addr)?;
+        let udp_socket = std::net::UdpSocket::bind(addr)?;
+        Ok(Self::from_std(udp_socket))
+    }
+
+    /// Upgrades a [`std::net::UdpSocket`] by wrapping it in a [`TokioAsyncUdpSocket`].
+    pub fn from_std(udp_socket: std::net::UdpSocket) -> TokioAsyncUdpSocket {
         udp_socket.set_nonblocking(true).unwrap();
-        Ok(AllowStdUdpSocket::from_std(udp_socket))
+        Self::from_mio(mio::net::UdpSocket::from_socket(udp_socket).expect("Unbound socket"))
     }
 
-    /// Changes the async poll interval for this socket, returning the previous value.
-    ///
-    /// A value of `None` indicates that no timed polling should be performed.
-    ///
-    /// The default value is
-    /// [`Some(DEFAULT_ASYNC_POLL_INTERVAL)`][AllowStdUdpSocket::DEFAULT_ASYNC_POLL_INTERVAL],
-    /// or 30ms.
-    pub fn set_async_poll_interval(&mut self, mut dur: Option<Duration>) -> Option<Duration> {
-        std::mem::swap(&mut self.2, &mut dur);
-        dur
-    }
-
-    fn wait_for_data(self: &Self, cx: &mut futures::task::Context<'_>) {
-        let delay;
-        if let Some(d) = self.2 {
-            let mut lock = self.1.lock().expect("Lock failed");
-            let opt_mut: &mut Option<Delay> = &mut lock;
-            if opt_mut.is_none() {
-                *opt_mut = Some(Delay::new(d));
-                delay = opt_mut.as_mut().unwrap();
-            } else {
-                delay = opt_mut.as_mut().unwrap();
-                delay.reset(d);
-            }
-
-            let _ = Pin::new(delay).poll(cx);
-        }
+    /// Wraps a [`mio::net::UdpSocket`] instance with a [`TokioAsyncUdpSocket`].
+    pub(crate) fn from_mio(udp_socket: UdpSocket) -> TokioAsyncUdpSocket {
+        TokioAsyncUdpSocket(PollEvented::new(udp_socket))
     }
 }
 
-impl Unpin for AllowStdUdpSocket {}
+impl Unpin for TokioAsyncUdpSocket {}
 
-impl AsyncDatagramSocket for AllowStdUdpSocket {}
+impl AsyncDatagramSocket for TokioAsyncUdpSocket {}
 
-impl DatagramSocketTypes for AllowStdUdpSocket {
+impl DatagramSocketTypes for TokioAsyncUdpSocket {
     type SocketAddr = std::net::SocketAddr;
     type Error = std::io::Error;
 
     fn local_addr(&self) -> Result<Self::SocketAddr, Self::Error> {
-        self.0.local_addr()
+        self.0.get_ref().local_addr()
     }
 
     fn lookup_host(
@@ -123,6 +78,11 @@ impl DatagramSocketTypes for AllowStdUdpSocket {
     where
         Self: Sized,
     {
+        use async_coap::{
+            ALL_COAP_DEVICES_HOSTNAME, ALL_COAP_DEVICES_V4, ALL_COAP_DEVICES_V6_LL,
+            ALL_COAP_DEVICES_V6_RL,
+        };
+
         if host == ALL_COAP_DEVICES_HOSTNAME {
             Ok(vec![
                 SocketAddr::V6(SocketAddrV6::new(
@@ -149,7 +109,7 @@ impl DatagramSocketTypes for AllowStdUdpSocket {
     }
 }
 
-impl AsyncSendTo for AllowStdUdpSocket {
+impl AsyncSendTo for TokioAsyncUdpSocket {
     fn poll_send_to<B>(
         self: Pin<&Self>,
         cx: &mut Context<'_>,
@@ -157,19 +117,21 @@ impl AsyncSendTo for AllowStdUdpSocket {
         addr: B,
     ) -> Poll<Result<usize, Self::Error>>
     where
-        B: super::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>,
+        B: async_coap::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>,
     {
+        // We are ignoring the return value of `poll_write_ready` here because
+        // it will pretty much always lie to us the first time it is called.
+        // Instead, since we know that the underlying socket is configured to
+        // be non-blocking, we trust it instead.
+        let _ = self.0.poll_write_ready(cx);
+
         if let Some(addr) = addr.to_socket_addrs()?.next() {
-            match self.get_ref().0.send_to(buf, addr) {
-                Ok(written) => Poll::Ready(Ok(written)),
-                Err(e) => {
-                    if e.kind() == std::io::ErrorKind::WouldBlock {
-                        self.get_ref().wait_for_data(cx);
-                        Poll::Pending
-                    } else {
-                        Poll::Ready(Err(e))
-                    }
+            match self.0.get_ref().send_to(buf, &addr) {
+                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    self.0.clear_write_ready(cx)?;
+                    Poll::Pending
                 }
+                x => Poll::Ready(x),
             }
         } else {
             Poll::Ready(Err(std::io::Error::new(
@@ -180,17 +142,19 @@ impl AsyncSendTo for AllowStdUdpSocket {
     }
 }
 
-impl AsyncRecvFrom for AllowStdUdpSocket {
+impl AsyncRecvFrom for TokioAsyncUdpSocket {
     fn poll_recv_from(
         self: Pin<&Self>,
         cx: &mut Context<'_>,
         buf: &mut [u8],
     ) -> Poll<Result<(usize, Self::SocketAddr, Option<Self::SocketAddr>), Self::Error>> {
-        match self.0.recv_from(buf) {
+        ready!(self.0.poll_read_ready(cx, mio::Ready::readable()))?;
+
+        match self.0.get_ref().recv_from(buf) {
             Ok((size, from)) => Poll::Ready(Ok((size, from, None))),
             Err(e) => match e.kind() {
                 std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut => {
-                    self.wait_for_data(cx);
+                    self.0.clear_read_ready(cx, mio::Ready::readable())?;
                     Poll::Pending
                 }
                 _ => Poll::Ready(Err(e)),
@@ -199,15 +163,15 @@ impl AsyncRecvFrom for AllowStdUdpSocket {
     }
 }
 
-impl Deref for AllowStdUdpSocket {
+impl Deref for TokioAsyncUdpSocket {
     type Target = UdpSocket;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        self.0.get_ref()
     }
 }
 
-impl MulticastSocket for AllowStdUdpSocket {
+impl MulticastSocket for TokioAsyncUdpSocket {
     type IpAddr = std::net::IpAddr;
 
     fn join_multicast<A>(&self, addr: A) -> Result<(), Self::Error>
