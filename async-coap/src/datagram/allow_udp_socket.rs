@@ -126,14 +126,17 @@ impl DatagramSocketTypes for AllowStdUdpSocket {
         if host == ALL_COAP_DEVICES_HOSTNAME {
             Ok(vec![
                 SocketAddr::V6(SocketAddrV6::new(
-                    "FF02:0:0:0:0:0:0:FD".parse().unwrap(),
+                    ALL_COAP_DEVICES_V6_LL.parse().unwrap(),
                     port,
                     0,
                     0,
                 )),
-                SocketAddr::V4(SocketAddrV4::new("224.0.1.187".parse().unwrap(), port)),
+                SocketAddr::V4(SocketAddrV4::new(
+                    ALL_COAP_DEVICES_V4.parse().unwrap(),
+                    port,
+                )),
                 SocketAddr::V6(SocketAddrV6::new(
-                    "FF03:0:0:0:0:0:0:FD".parse().unwrap(),
+                    ALL_COAP_DEVICES_V6_RL.parse().unwrap(),
                     port,
                     0,
                     0,
