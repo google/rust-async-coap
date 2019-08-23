@@ -87,18 +87,6 @@ pub trait AsyncSendTo: DatagramSocketTypes {
             addr: addr,
         }
     }
-
-    /// A *synchronous* version of [`AsyncSendTo::poll_send_to`]. If this isn't overridden by the
-    /// trait's implementation, the default version will call `poll_send_to()` and panics if it
-    /// returns `Poll::Pending`.
-    fn send_to<B>(&self, buf: &[u8], addr: B) -> Result<usize, Self::Error>
-    where
-        B: super::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>,
-    {
-        self.next_send_to(buf, addr)
-            .now_or_never()
-            .expect("send_to blocked")
-    }
 }
 
 /// Future returned from [`AsyncSendTo::next_send_to`].

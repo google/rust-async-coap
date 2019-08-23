@@ -193,6 +193,8 @@ where
             .ok_or(Error::Cancelled)?
             .socket()
             .send_to(&buffer, self.dest)
+            .now_or_never()
+            .expect("send_to blocked")
             .err()
         {
             println!("send_to: io error: {:?} (dest={:?})", e, self.dest);
@@ -243,6 +245,8 @@ where
             .ok_or(Error::Cancelled)?
             .socket()
             .send_to(buffer, self.dest)
+            .now_or_never()
+            .expect("send_to blocked")
             .err()
         {
             println!("send_to: io error: {:?} (dest={:?})", e, self.dest);
