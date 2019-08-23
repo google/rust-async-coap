@@ -53,6 +53,15 @@ pub const URI_SCHEME_NULL: &'static str = "null";
 /// ensure that it can never be interpreted as a partial domain name.
 pub const ALL_COAP_DEVICES_HOSTNAME: &'static str = "all-coap-devices.";
 
+/// String slice containing the "All CoAP Devices" IPv6 **Link**-Local Multicast Address: `FF02::FD`
+pub const ALL_COAP_DEVICES_V6_LL: &'static str = "FF02::FD";
+
+/// String slice containing the "All CoAP Devices" IPv6 **Realm**-Local Multicast Address: `FF03::FD`
+pub const ALL_COAP_DEVICES_V6_RL: &'static str = "FF03::FD";
+
+/// String slice containing the "All CoAP Devices" IPv4 **Link**-Local Multicast Address: `224.0.1.187`
+pub const ALL_COAP_DEVICES_V4: &'static str = "224.0.1.187";
+
 /// Value for `OptionNumber::OBSERVE` when registering an observer.
 ///
 /// Note that this is only for requests, replies have entirely different semantics.
