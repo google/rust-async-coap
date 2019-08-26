@@ -395,9 +395,9 @@ mod tests {
 
     #[test]
     fn ping_localhost() {
-        let socket = AllowStdUdpSocket::bind("[::]:12345").expect("UDP bind failed");
+        let socket = AllowStdUdpSocket::bind("127.0.0.1:12345").expect("UDP bind failed");
         let local_endpoint = DatagramLocalEndpoint::new(socket);
-        let dest = "[::1]:12345";
+        let dest = "127.0.0.1:12345";
         let send_desc = Ping::new();
         let future = local_endpoint.send(dest, send_desc);
 
