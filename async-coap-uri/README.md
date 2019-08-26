@@ -1,7 +1,7 @@
 async-coap-uri: Safe, In-place URI Abstraction
 ==============================================
 
-[![Build Status](https://travis-ci.com/google/rust-async-coap.svg?branch=master)](https://travis-ci.com/google/rust-async-coap)
+[![Build Status](https://travis-ci.org/google/rust-async-coap.svg?branch=master)](https://travis-ci.org/google/rust-async-coap)
 [![Crates.io](https://img.shields.io/crates/v/async-coap-uri.svg)](https://crates.io/crates/async-coap-uri)
 [![API](https://docs.rs/async-coap-uri/badge.svg)](https://docs.rs/async-coap-uri)
 

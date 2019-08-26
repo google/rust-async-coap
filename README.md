@@ -1,7 +1,7 @@
 rust-async-coap: An experimental, asynchronous CoAP library
 ===========================================================
 
-[![Build Status](https://travis-ci.com/google/rust-async-coap.svg?branch=master)](https://travis-ci.com/google/rust-async-coap)
+[![Build Status](https://travis-ci.org/google/rust-async-coap.svg?branch=master)](https://travis-ci.org/google/rust-async-coap)
 [![Crates.io](https://img.shields.io/crates/v/async-coap.svg)](https://crates.io/crates/async-coap)
 [![API](https://docs.rs/async-coap/badge.svg)](https://docs.rs/async-coap)
 
