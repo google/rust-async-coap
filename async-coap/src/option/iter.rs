@@ -194,7 +194,7 @@ pub trait OptionIteratorExt<'a>: Iterator<Item = Result<(OptionNumber, &'a [u8])
             buf.extend(item.escape_uri().for_query());
         }
 
-        // TODO: Check out those reserved Location-* options and fail if found.
+        // TODO(#6): Check out those reserved Location-* options and fail if found.
         //       See <https://tools.ietf.org/html/rfc7252#section-5.10.7> for more info.
 
         Ok(RelRefBuf::from_string(buf).expect("Constructed URI was malformed"))

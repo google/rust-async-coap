@@ -115,7 +115,7 @@ impl Uri {
     /// ```
     pub fn from_str(s: &str) -> Result<&Uri, ParseError> {
         let str_ref = s.as_ref();
-        // TODO: Replace this with an optimized validity check.
+        // TODO(#10): Replace this with an optimized validity check.
         //       We are currently using `UriRawComponents::from_str()` as a crutch here;
         //       it includes extraneous operations that are not related to verifying if a
         //       URI is well-formed.
@@ -146,7 +146,7 @@ impl Uri {
     /// [relative-reference]: https://tools.ietf.org/html/rfc3986#section-4.2
     pub fn is_str_valid<S: AsRef<str>>(s: S) -> bool {
         let str_ref = s.as_ref();
-        // TODO: Replace this with an optimized validity check.
+        // TODO(#10): Replace this with an optimized validity check.
         //       We are currently using `UriRawComponents::from_str()` as a crutch here;
         //       it includes extraneous operations that are not related to verifying if a
         //       URI is well-formed.

@@ -101,7 +101,7 @@ impl<IC: InboundContext> ResponseTracker<IC> for UdpResponseTracker<IC> {
         socket_addr: IC::SocketAddr,
         handler: Arc<Mutex<dyn HandleResponse<IC> + 'a>>,
     ) {
-        // TODO: Figure out how to do this without the transmute.
+        // TODO(#3): Eliminate the need for this transmute.
         //       This transmute action here is a hack to coerce the lifetime 'a into 'static.
         //       It feels like there must be a different way, but after 8+ hours of lifetime hell
         //       I couldn't figure it out.
