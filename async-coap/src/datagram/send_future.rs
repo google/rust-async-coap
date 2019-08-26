@@ -370,7 +370,7 @@ where
 
         match inner.state() {
             UdpSendFutureState::Uninit => {
-                // TODO: Figure out how this can be set programmatically.
+                // TODO(#4): Figure out how this can be set programmatically.
                 inner.timeout.set(Some(
                     Instant::now() + inner.send_desc.transmit_wait_duration(),
                 ));

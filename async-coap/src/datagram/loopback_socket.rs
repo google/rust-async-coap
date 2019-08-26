@@ -169,7 +169,6 @@ impl AsyncRecvFrom for LoopbackSocket {
                     let len = packet.len();
                     if buf.len() >= len {
                         buf[..len].copy_from_slice(&packet);
-                        // TODO: Handle multicast destination determination
                         Poll::Ready(Ok((len, self.local_addr().unwrap(), Some(addr))))
                     } else {
                         Poll::Ready(Err(Error::IOError))

@@ -77,7 +77,7 @@ impl UriUnescapeBuf {
         if !self.path_iter_did_fire {
             self.path_iter_did_fire = true;
 
-            // TODO: Allow `UriUnescapeBuf::path_segments` and `UriUnescapeBuf::query_items` to
+            // TODO(#11): Allow `UriUnescapeBuf::path_segments` and `UriUnescapeBuf::query_items` to
             //       be called in any order. Currently, `query_items()` must be called first or
             //       not at all---and that is enforced by this next line. This should be fixed.
             self.query_iter_did_fire = true;

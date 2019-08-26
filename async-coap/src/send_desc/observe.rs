@@ -56,7 +56,7 @@ impl<IC> SendObserve<IC> {
 
 impl<IC: InboundContext> SendDesc<IC, ()> for SendObserve<IC> {
     fn delay_to_restart(&self) -> Option<Duration> {
-        // TODO: Derive this value from the `MaxAge` option on the response.
+        // TODO(#7): Derive this value from the `MaxAge` option on the response.
         Some(Duration::from_secs(60))
     }
 

@@ -48,7 +48,7 @@ pub fn decode_option<'a>(
     iter: &mut core::slice::Iter<'a, u8>,
     last_option: OptionNumber,
 ) -> Result<Option<(OptionNumber, &'a [u8])>, Error> {
-    // TODO: Improve performance.
+    // TODO(#5): Improve performance.
     macro_rules! try_next {
         ($iter:expr, $none:expr) => {
             match ($iter).next() {

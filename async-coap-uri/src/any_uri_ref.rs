@@ -44,7 +44,7 @@ pub trait AnyUriRef {
     /// If this method writes out something that is not a valid URI reference, the
     /// resulting behavior is undefined.
     ///
-    /// TODO: Investigate implications of making this method unsafe.
+    /// TODO(#8): Investigate implications of making this method unsafe.
     fn write_to<T: core::fmt::Write + ?Sized>(
         &self,
         write: &mut T,
@@ -114,7 +114,7 @@ pub trait AnyUriRef {
         // This implementation is kind of a mess, but it does work and it does
         // pass the rather large corpus of unit tests. It eventually needs to be
         // rewritten to avoid memory allocation.
-        // TODO: Rewrite `AnyUriRef::write_resolved` to not use any memory allocation.
+        // TODO(#9): Rewrite `AnyUriRef::write_resolved` to not use any memory allocation.
 
         if target.is_empty() {
             self.write_to(f)?;
