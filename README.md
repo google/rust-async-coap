@@ -1,5 +1,5 @@
-rust-async-coap: An experimental, asynchronous CoAP library
-===========================================================
+async-coap: An experimental, asynchronous CoAP library
+======================================================
 
 [![Build Status](https://travis-ci.org/google/rust-async-coap.svg?branch=master)](https://travis-ci.org/google/rust-async-coap)
 [![Crates.io](https://img.shields.io/crates/v/async-coap.svg)](https://crates.io/crates/async-coap)
@@ -16,6 +16,22 @@ interface for using and serving CoAP resources. A back-end that wraps around Rus
 you might think of.
 
 See the [crate documentation](https://docs.rs/async-coap) for more information.
+
+## What is CoAP? ##
+
+[CoAP][RFC7252] is a RESTful application protocol (like HTTP) designed for highly embedded
+devices and small packet sizes. It is similar to HTTP in the sense that it is request/response
+based, has methods like `GET`/`PUT`/`POST`, and uses hierarchical URLs to identify resources;
+but unlike HTTP it is optimized for machine-to-machine interactions and includes mechanisms for
+asynchronously [observing resources][RFC7641] for changes.
+
+CoAP is the basis for several [upcoming][iot-1] [IoT][iot-2] [protocols][iot-3].
+
+[RFC7252]: https://tools.ietf.org/html/rfc7252
+[RFC7641]: https://tools.ietf.org/html/rfc7641
+[iot-1]: https://github.com/google/splot-java#splot-for-java
+[iot-2]: https://iot.mozilla.org/
+[iot-3]: https://www.omaspecworks.org/what-is-oma-specworks/iot/lightweight-m2m-lwm2m/
 
 ## Usage ##
 
