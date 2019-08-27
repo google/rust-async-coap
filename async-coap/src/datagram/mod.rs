@@ -33,7 +33,7 @@ use super::*;
 mod async_socket;
 pub use async_socket::{
     AsyncDatagramSocket, AsyncRecvFrom, AsyncSendTo, DatagramSocketTypes, MulticastSocket,
-    NextRecvFromFuture, NextSendToFuture,
+    RecvFromFuture, SendToFuture,
 };
 
 mod allow_udp_socket;

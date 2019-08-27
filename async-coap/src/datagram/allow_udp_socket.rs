@@ -175,20 +175,6 @@ impl AsyncSendTo for AllowStdUdpSocket {
             )))
         }
     }
-
-    fn send_to<B>(&self, buf: &[u8], addr: B) -> Result<usize, Self::Error>
-    where
-        B: super::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>,
-    {
-        if let Some(addr) = addr.to_socket_addrs()?.next() {
-            self.0.send_to(buf, addr)
-        } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::AddrNotAvailable,
-                "Address lookup failed",
-            ))
-        }
-    }
 }
 
 impl AsyncRecvFrom for AllowStdUdpSocket {

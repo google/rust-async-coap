@@ -199,7 +199,7 @@ impl<US: AsyncDatagramSocket> LocalEndpoint for DatagramLocalEndpoint<US> {
     {
         async move {
             let mut buffer = [0u8; StandardCoapConstants::MAX_OUTBOUND_PACKET_LENGTH];
-            let (len, source, dest) = match self.socket().next_recv_from(&mut buffer).await {
+            let (len, source, dest) = match self.socket().recv_from(&mut buffer).await {
                 Ok(x) => x,
                 Err(_) => return Err(Error::IOError),
             };
@@ -224,7 +224,7 @@ impl<US: AsyncDatagramSocket> LocalEndpoint for DatagramLocalEndpoint<US> {
                 handler(&inbound_context)?;
 
                 if let Some(message) = inbound_context.into_message_out() {
-                    if let Some(e) = self.socket().next_send_to(&message, source).await.err() {
+                    if let Some(e) = self.socket().send_to(&message, source).await.err() {
                         error!("send_to: io error: {:?} (dest={:?})", e, source);
                     }
                 } else {
@@ -235,7 +235,7 @@ impl<US: AsyncDatagramSocket> LocalEndpoint for DatagramLocalEndpoint<US> {
 
                     let _ = message::ResetMessage.write_msg_to(&mut builder);
 
-                    if let Some(e) = self.socket().next_send_to(&builder, source).await.err() {
+                    if let Some(e) = self.socket().send_to(&builder, source).await.err() {
                         error!("send_to: io error: {:?} (dest={:?})", e, source);
                     }
                 }
@@ -263,7 +263,7 @@ impl<US: AsyncDatagramSocket> LocalEndpoint for DatagramLocalEndpoint<US> {
                         let _ = message::ResetMessage.write_msg_to(&mut builder);
                     }
 
-                    if let Some(e) = self.socket().next_send_to(&builder, source).await.err() {
+                    if let Some(e) = self.socket().send_to(&builder, source).await.err() {
                         error!("send_to: io error: {:?} (dest={:?})", e, source);
                         Err(Error::IOError)
                     } else {
@@ -285,7 +285,7 @@ impl<US: AsyncDatagramSocket> LocalEndpoint for DatagramLocalEndpoint<US> {
 
                 let _ = message::ResetMessage.write_msg_to(&mut builder);
 
-                if let Some(e) = self.socket().next_send_to(&builder, source).await.err() {
+                if let Some(e) = self.socket().send_to(&builder, source).await.err() {
                     error!("send_to: io error: {:?} (dest={:?})", e, source);
                 }
 

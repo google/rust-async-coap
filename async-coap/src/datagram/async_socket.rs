@@ -76,34 +76,22 @@ pub trait AsyncSendTo: DatagramSocketTypes {
         B: super::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>;
 
     /// Returns a future that uses [`AsyncSendTo::poll_send_to`].
-    fn next_send_to<'a, 'b, B>(&'a self, buf: &'b [u8], addr: B) -> NextSendToFuture<'a, 'b, Self>
+    fn send_to<'a, 'b, B>(&'a self, buf: &'b [u8], addr: B) -> SendToFuture<'a, 'b, Self>
     where
         B: super::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>,
     {
         let addr = addr.to_socket_addrs().unwrap().next().unwrap();
-        NextSendToFuture {
+        SendToFuture {
             socket: self,
             buffer: buf,
             addr: addr,
         }
     }
-
-    /// A *synchronous* version of [`AsyncSendTo::poll_send_to`]. If this isn't overridden by the
-    /// trait's implementation, the default version will call `poll_send_to()` and panics if it
-    /// returns `Poll::Pending`.
-    fn send_to<B>(&self, buf: &[u8], addr: B) -> Result<usize, Self::Error>
-    where
-        B: super::ToSocketAddrs<SocketAddr = Self::SocketAddr, Error = Self::Error>,
-    {
-        self.next_send_to(buf, addr)
-            .now_or_never()
-            .expect("send_to blocked")
-    }
 }
 
-/// Future returned from [`AsyncSendTo::next_send_to`].
+/// Future returned from [`AsyncSendTo::send_to`].
 #[derive(Debug)]
-pub struct NextSendToFuture<'a, 'b, T>
+pub struct SendToFuture<'a, 'b, T>
 where
     T: DatagramSocketTypes + AsyncSendTo + ?Sized,
 {
@@ -112,7 +100,7 @@ where
     addr: T::SocketAddr,
 }
 
-impl<'a, 'b, T> NextSendToFuture<'a, 'b, T>
+impl<'a, 'b, T> SendToFuture<'a, 'b, T>
 where
     T: DatagramSocketTypes + AsyncSendTo + ?Sized,
 {
@@ -124,7 +112,7 @@ where
     }
 }
 
-impl<'a, 'b, T> Future for NextSendToFuture<'a, 'b, T>
+impl<'a, 'b, T> Future for SendToFuture<'a, 'b, T>
 where
     T: DatagramSocketTypes + AsyncSendTo + ?Sized,
 {
@@ -138,14 +126,14 @@ where
     }
 }
 
-/// Future returned from [`AsyncRecvFrom::next_recv_from`].
+/// Future returned from [`AsyncRecvFrom::recv_from`].
 #[derive(Debug)]
-pub struct NextRecvFromFuture<'a, 'b, T: AsyncRecvFrom + ?Sized> {
+pub struct RecvFromFuture<'a, 'b, T: AsyncRecvFrom + ?Sized> {
     socket: &'a T,
     buffer: &'b mut [u8],
 }
 
-impl<'a, 'b, T: AsyncRecvFrom + ?Sized + Unpin> NextRecvFromFuture<'a, 'b, T> {
+impl<'a, 'b, T: AsyncRecvFrom + ?Sized + Unpin> RecvFromFuture<'a, 'b, T> {
     fn poll_unpin(
         self: &mut Self,
         cx: &mut futures::task::Context<'_>,
@@ -154,7 +142,7 @@ impl<'a, 'b, T: AsyncRecvFrom + ?Sized + Unpin> NextRecvFromFuture<'a, 'b, T> {
     }
 }
 
-impl<'a, 'b, T: AsyncRecvFrom + ?Sized> Future for NextRecvFromFuture<'a, 'b, T> {
+impl<'a, 'b, T: AsyncRecvFrom + ?Sized> Future for RecvFromFuture<'a, 'b, T> {
     type Output = Result<(usize, T::SocketAddr, Option<T::SocketAddr>), T::Error>;
 
     fn poll(
@@ -187,7 +175,7 @@ pub trait AsyncRecvFrom: DatagramSocketTypes {
     /// optionally provide the destination (local) `SocketAddr`.
     ///
     /// If you need to receive a packet from within an async block, see
-    /// [`AsyncRecvFrom::next_recv_from`], which returns a [`Future`][std::future::Future].
+    /// [`AsyncRecvFrom::recv_from`], which returns a [`Future`][std::future::Future].
     ///
     /// [^1]: Note that while the spirit of this method intends for it to be non-blocking,
     ///       [`AllowStdUdpSocket`] can in fact block execution depending on the state of the
@@ -199,8 +187,8 @@ pub trait AsyncRecvFrom: DatagramSocketTypes {
     ) -> Poll<Result<(usize, Self::SocketAddr, Option<Self::SocketAddr>), Self::Error>>;
 
     /// Returns a future that uses [`poll_recv_from`][AsyncRecvFrom::poll_recv_from].
-    fn next_recv_from<'a, 'b>(&'a self, buf: &'b mut [u8]) -> NextRecvFromFuture<'a, 'b, Self> {
-        NextRecvFromFuture {
+    fn recv_from<'a, 'b>(&'a self, buf: &'b mut [u8]) -> RecvFromFuture<'a, 'b, Self> {
+        RecvFromFuture {
             socket: self,
             buffer: buf,
         }
