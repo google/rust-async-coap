@@ -15,6 +15,7 @@
 
 use super::*;
 use core::fmt::Display;
+use core::ops::Deref;
 
 /// Trait for objects that represent logical URI-references. Useful for generic programming.
 ///
@@ -27,37 +28,68 @@ pub trait AnyUriRef {
     #[must_use]
     fn components(&self) -> UriRawComponents<'_>;
 
-    /// Serializes this URI to anything implementing [`core::fmt::Write`]. **Override with care!**
+    /// Returns true if the underlying URI-reference is actually the empty reference.
+    #[must_use]
+    fn is_empty(&self) -> bool {
+        self.components().is_empty()
+    }
+
+    /// Gets the [`UriType`] of the underlying URI-reference.
     ///
-    /// The purpose of this method is to provide a uniform way for a type that implements this
-    /// trait to write out a well-formed URI; without making any assumptions on what that type
-    /// might write out for [`std::fmt::Display`] (or even if it implements it at all). Thus, traits
-    /// can be a bit more fast-and-loose with their implementations of [`std::fmt::Display`].
+    /// [`UriType`]: enum.UriType.html
+    #[must_use]
+    fn uri_type(&self) -> UriType {
+        self.components().uri_type()
+    }
+
+    /// Creates a new [`UriRefBuf`] from this [`AnyUriRef`].
     ///
-    /// See the documentation for [`display`](AnyUriRef::display) and [`UriDisplay`] for examples
-    /// of usage.
+    /// The default implementation uses [`AnyUriRef::write_to_unsafe`] to render out
+    /// the content of the URI-reference.
+    #[cfg(feature = "std")]
+    #[must_use]
+    fn to_uri_ref_buf(&self) -> UriRefBuf {
+        unsafe { UriRefBuf::from_string_unchecked(self.display().to_string()) }
+    }
+
+    /// Hook for custom URI serialization implementation via [`AnyUriRefExt::write_to`].
+    /// **Override with care!**
     ///
-    /// # Safety
+    /// In general, you should never need to call this method directly: use
+    /// [`AnyUriRefExt::write_to`] instead. See the documentation for [`AnyUriRefExt::write_to`]
+    /// for more details on usage.
     ///
-    /// Calling this method is not unsafe, *but implementing it is*! The underlying
-    /// guarantee is that the written URI reference SHALL be well-formed.
-    /// If this method writes out something that is not a valid URI reference, the
-    /// resulting behavior is undefined.
+    /// This method is marked as `unsafe`. However, *only overriding the default implementation is
+    /// considered unsafe*: calling the method is actually safe. You can indirectly call this method
+    /// from safe code by calling [`AnyUriRefExt::write_to`], which is a non-overridable wrapper
+    /// around this method.
     ///
-    /// TODO(#8): Investigate implications of making this method unsafe.
-    fn write_to<T: core::fmt::Write + ?Sized>(
+    /// # Override Safety
+    ///
+    /// Calling this method is not unsafe, *but overriding it is*! The underlying
+    /// guarantee is that the written URI reference SHALL be well-formed. Lots of
+    /// code depends on this guarantee in order to avoid undefined behavior.
+    ///
+    /// Bottom line: **If this method's implementation writes out something that is
+    /// not a valid, well-formed URI-reference, the resulting behavior is undefined.**
+    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
         &self,
         write: &mut T,
     ) -> Result<(), core::fmt::Error> {
         self.components().write_to(write)
     }
+}
 
+/// Extension trait for [`AnyUriRef`] that provides methods that cannot be overridden from
+/// their default implementations.
+///
+/// This trait is automatically implemented for all types that implement [`AnyUriRef`].
+pub trait AnyUriRefExt: AnyUriRef {
     /// Wraps this `AnyUriRef` instance in a [`UriDisplay`] object for use with formatting
     /// macros like `write!` and `format!`.
     ///
-    /// The resulting instance will use the [`AnyUriRef::write_to`] method on this trait.
-    ///
-    /// This method should not be overridden: override [`AnyUriRef::write_to`] instead.
+    /// The resulting instance will ultimately use the [`AnyUriRef::write_to_unsafe`] method
+    /// to render the URI-reference.
     ///
     /// This method is similar to the [`display`][display-path] method on [`std::path::Path`].
     ///
@@ -79,33 +111,27 @@ pub trait AnyUriRef {
         UriDisplay(self)
     }
 
-    /// Returns true if the underlying URI-reference is actually the empty reference.
-    #[must_use]
-    fn is_empty(&self) -> bool {
-        self.components().is_empty()
-    }
-
-    /// Gets the [`UriType`] of the underlying URI-reference.
+    /// Serializes this URI to anything implementing [`core::fmt::Write`].
     ///
-    /// [`UriType`]: enum.UriType.html
-    #[must_use]
-    fn uri_type(&self) -> UriType {
-        self.components().uri_type()
-    }
-
-    /// Creates a new [`UriRefBuf`] from this [`AnyUriRef`].
+    /// The purpose of this method is to provide a uniform way for a type that implements
+    /// [`AnyUriRef`] to write out a well-formed URI; without making any assumptions on what
+    /// that type might write out for [`std::fmt::Display`] (or even if it implements it at all).
     ///
-    /// The default implementation uses the [`AnyUriRef::write_to`] method to render out
-    /// the content of the URI-reference.
-    #[cfg(feature = "std")]
-    #[must_use]
-    fn to_uri_ref_buf(&self) -> UriRefBuf {
-        unsafe { UriRefBuf::from_string_unchecked(self.display().to_string()) }
+    /// See the documentation for [`display`](AnyUriRefExt::display) and [`UriDisplay`] for
+    /// examples of usage.
+    ///
+    /// You can't change the implementation of this method directly, this method simply calls
+    /// [`AnyUriRef::write_to_unsafe`], which can be overridden (albeit unsafely). Be sure to
+    /// follow the warnings in the associated documentation.
+    fn write_to<T: core::fmt::Write + ?Sized>(
+        &self,
+        write: &mut T,
+    ) -> Result<(), core::fmt::Error> {
+        unsafe { self.write_to_unsafe(write) }
     }
 
     /// Writes out to a [`core::fmt::Write`] instance the result of performing URI resolution
     /// against `target`, with `self` being the base URI.
-    ///
     fn write_resolved<T: core::fmt::Write + ?Sized, D: AnyUriRef + ?Sized>(
         &self,
         target: &D,
@@ -288,19 +314,13 @@ pub trait AnyUriRef {
     }
 }
 
-use core::ops::Deref;
+/// Blanket implementation of `AnyUriRefExt` for all `AnyUriRef` instances.
+impl<T: AnyUriRef + ?Sized> AnyUriRefExt for T {}
 
 /// Blanket implementation for Copy-On-Write types.
 impl<'a, T: AnyUriRef + Clone + ?Sized> AnyUriRef for Cow<'a, T> {
     fn components(&self) -> UriRawComponents<'_> {
         self.deref().components()
-    }
-
-    fn write_to<W: core::fmt::Write + ?Sized>(
-        &self,
-        write: &mut W,
-    ) -> Result<(), core::fmt::Error> {
-        self.deref().write_to(write)
     }
 
     fn is_empty(&self) -> bool {
@@ -316,21 +336,16 @@ impl<'a, T: AnyUriRef + Clone + ?Sized> AnyUriRef for Cow<'a, T> {
         self.deref().to_uri_ref_buf()
     }
 
-    fn write_resolved<W: core::fmt::Write + ?Sized, D: AnyUriRef + ?Sized>(
+    unsafe fn write_to_unsafe<W: core::fmt::Write + ?Sized>(
         &self,
-        dest: &D,
-        output: &mut W,
-    ) -> Result<(), ResolveError> {
-        self.deref().write_resolved(dest, output)
-    }
-
-    fn resolved<W: AnyUriRef + ?Sized>(&self, dest: &W) -> Result<UriRefBuf, ResolveError> {
-        self.deref().resolved(dest)
+        write: &mut W,
+    ) -> Result<(), core::fmt::Error> {
+        self.deref().write_to_unsafe(write)
     }
 }
 
 /// Helper class to assist with using [`AnyUriRef`] with formatters; instantiated by
-/// [`AnyUriRef::display`].
+/// [`AnyUriRefExt::display`].
 ///
 /// This type is similar to [`std::path::Display`].
 #[derive(Debug, Copy, Clone)]

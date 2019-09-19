@@ -44,7 +44,10 @@ impl AnyUriRef for UriRawComponents<'_> {
     /// Note that the implementation of this method for [`UriRawComponents`] ignores
     /// the value of `self.userinfo`, `self.host`, and `self.port`; instead relying entirely
     /// on `self.authority`.
-    fn write_to<T: core::fmt::Write + ?Sized>(&self, f: &mut T) -> Result<(), core::fmt::Error> {
+    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
+        &self,
+        f: &mut T,
+    ) -> Result<(), core::fmt::Error> {
         // Note that everything in `self` is already escaped, so we
         // don't need to do that here.
         if let Some(scheme) = self.scheme {
