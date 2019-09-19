@@ -185,6 +185,7 @@ pub use uri_type::UriType;
 
 mod any_uri_ref;
 pub use any_uri_ref::AnyUriRef;
+pub use any_uri_ref::AnyUriRefExt;
 pub use any_uri_ref::UriDisplay;
 
 mod error;
@@ -251,9 +252,9 @@ pub use async_coap_uri_macros::assert_rel_ref_literal;
 #[doc(hidden)]
 pub mod prelude {
     pub use super::escape::StrExt;
-    pub use super::AnyUriRef;
     pub use super::UriRawComponents;
     pub use super::{rel_ref, uri, uri_ref};
+    pub use super::{AnyUriRef, AnyUriRefExt};
     pub use super::{RelRef, Uri, UriRef};
 
     pub use {assert_rel_ref_literal, assert_uri_literal, assert_uri_ref_literal};

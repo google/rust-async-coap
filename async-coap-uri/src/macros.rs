@@ -313,13 +313,6 @@ macro_rules! impl_uri_traits {
                 self.0.components()
             }
 
-            fn write_to<W: core::fmt::Write + ?Sized>(
-                &self,
-                write: &mut W,
-            ) -> Result<(), core::fmt::Error> {
-                self.0.write_to(write)
-            }
-
             fn is_empty(&self) -> bool {
                 self.0.is_empty()
             }
@@ -332,19 +325,11 @@ macro_rules! impl_uri_traits {
                 self.0.to_uri_ref_buf()
             }
 
-            fn write_resolved<W: core::fmt::Write + ?Sized, D: $crate::AnyUriRef + ?Sized>(
+            unsafe fn write_to_unsafe<W: core::fmt::Write + ?Sized>(
                 &self,
-                dest: &D,
-                output: &mut W,
-            ) -> Result<(), $crate::ResolveError> {
-                self.0.write_resolved(dest, output)
-            }
-
-            fn resolved<W: $crate::AnyUriRef + ?Sized>(
-                &self,
-                dest: &W,
-            ) -> Result<$crate::UriRefBuf, $crate::ResolveError> {
-                self.0.resolved(dest)
+                write: &mut W,
+            ) -> Result<(), core::fmt::Error> {
+                self.0.write_to_unsafe(write)
             }
         }
     };
@@ -389,15 +374,6 @@ macro_rules! _impl_uri_buf_traits_base {
                 b.components()
             }
 
-            fn write_to<W: core::fmt::Write + ?Sized>(
-                &self,
-                write: &mut W,
-            ) -> Result<(), core::fmt::Error> {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
-                b.write_to(write)
-            }
-
             fn is_empty(&self) -> bool {
                 use core::borrow::Borrow;
                 let b: &$B = self.borrow();
@@ -416,23 +392,13 @@ macro_rules! _impl_uri_buf_traits_base {
                 b.to_uri_ref_buf()
             }
 
-            fn write_resolved<W: core::fmt::Write + ?Sized, D: $crate::AnyUriRef + ?Sized>(
+            unsafe fn write_to_unsafe<W: core::fmt::Write + ?Sized>(
                 &self,
-                dest: &D,
-                output: &mut W,
-            ) -> Result<(), $crate::ResolveError> {
+                write: &mut W,
+            ) -> Result<(), core::fmt::Error> {
                 use core::borrow::Borrow;
                 let b: &$B = self.borrow();
-                b.write_resolved(dest, output)
-            }
-
-            fn resolved<W: $crate::AnyUriRef + ?Sized>(
-                &self,
-                dest: &W,
-            ) -> Result<$crate::UriRefBuf, $crate::ResolveError> {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
-                b.resolved(dest)
+                b.write_to_unsafe(write)
             }
         }
     };

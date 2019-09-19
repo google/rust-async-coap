@@ -57,7 +57,7 @@ impl AsRef<UriRef> for Uri {
 }
 
 impl AnyUriRef for Uri {
-    fn write_to<T: core::fmt::Write + ?Sized>(
+    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
         &self,
         write: &mut T,
     ) -> Result<(), core::fmt::Error> {
