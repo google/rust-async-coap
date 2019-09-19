@@ -89,9 +89,11 @@ impl DatagramSocketTypes for TokioAsyncUdpSocket {
         Self: Sized,
     {
         use async_coap::{
-            ALL_COAP_DEVICES_HOSTNAME, ALL_COAP_DEVICES_V4, ALL_COAP_DEVICES_V6_LL,
-            ALL_COAP_DEVICES_V6_RL,
+            ALL_COAP_DEVICES_HOSTNAME
         };
+        const ALL_COAP_DEVICES_V6_LL: &'static str = "FF02::FD";
+        const ALL_COAP_DEVICES_V6_RL: &'static str = "FF03::FD";
+        const ALL_COAP_DEVICES_V4: &'static str = "224.0.1.187";
 
         if host == ALL_COAP_DEVICES_HOSTNAME {
             Ok(vec![
