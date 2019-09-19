@@ -1,4 +1,4 @@
-[Tokio][]-based [`AsyncDatagramSocket`][] wrapper for [`async-coap`][]
+[Tokio][]-based [`AsyncDatagramSocket`][] backend for [`async-coap`][]
 ======================================================================
 
 [![Crates.io](https://img.shields.io/crates/v/async-coap-tokio.svg)](https://crates.io/crates/async-coap-tokio)
@@ -7,6 +7,7 @@
 This crate provides `TokioAsyncUdpSocket`: an asynchronous, [Tokio][]-based
 implementation of [`AsyncDatagramSocket`] for use with [`DatagramLocalEndpoint`].
 
+[`async-coap`]: https://github.com/google/rust-async-coap/
 [`AsyncDatagramSocket`]: https://docs.rs/async-coap/0.1/async_coap/datagram/trait.AsyncDatagramSocket.html
 [`DatagramLocalEndpoint`]: https://docs.rs/async-coap/0.1/async_coap/datagram/trait.DatagramLocalEndpoint.html
 [Tokio]: https://tokio.rs/

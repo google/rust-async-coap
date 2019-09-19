@@ -39,6 +39,16 @@ pub struct TokioAsyncUdpSocket(PollEvented<UdpSocket>);
 
 impl TokioAsyncUdpSocket {
     /// Analog of [`std::net::UdpSocket::bind`] for [`TokioAsyncUdpSocket`].
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use async_coap_tokio::TokioAsyncUdpSocket;
+    /// # fn main() -> std::io::Result<()> {
+    /// let async_socket = TokioAsyncUdpSocket::bind("[::]:0")?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn bind<A>(addr: A) -> std::io::Result<TokioAsyncUdpSocket>
     where
         A: std::net::ToSocketAddrs,

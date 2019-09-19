@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Robert Quattlebaum <rquattle@google.com>"]
 edition = "2018"
 description = "Tokio back-end for `async-coap::datagram`"
-repository = "https://github.com/google/rust-async-coap"
+repository = "https://github.com/google/rust-async-coap/tree/master/async-coap-tokio"
 documentation = "https://docs.rs/async-coap-tokio/"
 license = "Apache-2.0"
 readme = "README.md"
@@ -13,9 +13,9 @@ readme = "README.md"
 
 [dependencies]
 async-coap = { path = "../async-coap", version = "0.1" }
-tokio-net = "0.2.0-alpha.2"
+tokio-net = "0.2.0-alpha.4"
 mio = "0.6"
 futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly"] }
 
 [dev-dependencies]
-tokio = "0.2.0-alpha.2"
+tokio = "0.2.0-alpha.4"
