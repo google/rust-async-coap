@@ -17,8 +17,7 @@ use super::*;
 use futures::channel::mpsc::{channel, Receiver, Sender};
 use futures::lock::Mutex;
 use futures::prelude::*;
-use futures::task::Context;
-use futures::Poll;
+use futures::task::{Context, Poll};
 use std::fmt::{Debug, Display, Formatter};
 use std::pin::Pin;
 

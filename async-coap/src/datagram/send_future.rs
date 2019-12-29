@@ -16,8 +16,7 @@
 use super::*;
 use crate::message::BufferMessageEncoder;
 use futures::prelude::*;
-use futures::task::Waker;
-use futures::Poll;
+use futures::task::{Waker, Poll};
 use futures_timer::Delay;
 use std::cell::Cell;
 use std::fmt::{Display, Formatter};
@@ -135,11 +134,7 @@ where
 
     fn update_timeout(&mut self, d: Option<Duration>) {
         if let Some(d) = d {
-            if let Some(delay) = self.delay.as_mut() {
-                delay.reset(d);
-            } else {
-                self.delay = Some(Delay::new(d));
-            }
+            self.delay = Some(Delay::new(d));
         } else {
             self.delay = None;
         }
@@ -148,7 +143,7 @@ where
     fn poll_timeout(
         &mut self,
         cx: &mut futures::task::Context<'_>,
-    ) -> Poll<Result<(), std::io::Error>> {
+    ) -> Poll<()> {
         if let Some(delay) = self.delay.as_mut() {
             Pin::new(delay).poll(cx)
         } else {

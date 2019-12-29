@@ -17,12 +17,12 @@ use async_coap::datagram::{
     AsyncDatagramSocket, AsyncRecvFrom, AsyncSendTo, DatagramSocketTypes, MulticastSocket,
 };
 use futures::task::Context;
-use futures::{ready, Poll};
+use futures::{ready, task::Poll};
 use mio::net::UdpSocket;
 use std::net::{SocketAddr, SocketAddrV4, SocketAddrV6, ToSocketAddrs};
 use std::ops::Deref;
 use std::pin::Pin;
-use tokio_net::util::PollEvented;
+use tokio::io::PollEvented;
 
 /// An asynchronous [`AsyncDatagramSocket`] wrapper around [`std::net::UdpSocket`] that
 /// uses [Tokio][] for the event loop.
@@ -65,7 +65,7 @@ impl TokioAsyncUdpSocket {
 
     /// Wraps a [`mio::net::UdpSocket`] instance with a [`TokioAsyncUdpSocket`].
     pub(crate) fn from_mio(udp_socket: UdpSocket) -> TokioAsyncUdpSocket {
-        TokioAsyncUdpSocket(PollEvented::new(udp_socket))
+        TokioAsyncUdpSocket(PollEvented::new(udp_socket).expect("Async UDP socket"))
     }
 }
 

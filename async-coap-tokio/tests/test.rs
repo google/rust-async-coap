@@ -1,11 +1,9 @@
-#![feature(async_await)]
-
 use async_coap::datagram::DatagramLocalEndpoint;
 use async_coap::prelude::*;
 use async_coap_tokio::TokioAsyncUdpSocket;
 use futures::prelude::*;
 use std::sync::Arc;
-use tokio::executor::spawn;
+use tokio::spawn;
 
 #[tokio::test]
 async fn test_tokio() {

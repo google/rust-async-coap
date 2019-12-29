@@ -28,7 +28,6 @@
 //! Here we create a `SendDesc` instance that just sends a GET request and waits for a response:
 //!
 //! ```
-//! # #![feature(async_await)]
 //! # use std::sync::Arc;
 //! # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! # use async_coap::prelude::*;
@@ -60,7 +59,6 @@
 //! an owned copy of the message it received ([`OwnedImmutableMessage`](crate::message::OwnedImmutableMessage)):
 //!
 //! ```
-//! # #![feature(async_await)]
 //! # use std::sync::Arc;
 //! # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! # use async_coap::prelude::*;

@@ -124,7 +124,6 @@ use std::sync::Arc;
 /// Or, more naturally, the returned futures can be used directly in `async` blocks:
 ///
 /// ```
-/// # #![feature(async_await)]
 /// # use std::sync::Arc;
 /// # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 /// # use async_coap::prelude::*;
@@ -536,7 +535,6 @@ pub trait LocalEndpointExt: LocalEndpoint {
     /// future in an (effectively transparent) [`ArcGuard`] wrapper.
     ///
     /// ```
-    /// # #![feature(async_await)]
     /// #
     /// # use std::sync::Arc;
     /// # use futures::prelude::*;

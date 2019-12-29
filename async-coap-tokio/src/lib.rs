@@ -24,7 +24,7 @@
 //! use async_coap_tokio::TokioAsyncUdpSocket;
 //! use futures::prelude::*;
 //! use std::sync::Arc;
-//! use tokio::executor::spawn;
+//! use tokio::spawn;
 //!
 //! #[tokio::main]
 //! async fn main() {
