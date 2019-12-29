@@ -78,8 +78,8 @@ impl<IC: InboundContext> UdpResponseTracker<IC> {
             }
         } else if let Some(weak) = self
             .msg_token_map
-            .get(&(message.msg_token(), Some(socket_addr)))
-            .or(self.msg_token_map.get(&(message.msg_token(), None)))
+            .remove(&(message.msg_token(), Some(socket_addr)))
+            .or(self.msg_token_map.remove(&(message.msg_token(), None)))
         {
             debug!("Matched response on token");
             if let Some(mutex) = weak.upgrade() {
