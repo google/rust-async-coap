@@ -20,7 +20,7 @@ use std::net::{SocketAddr, SocketAddrV4, SocketAddrV6, UdpSocket};
 use std::ops::Deref;
 use std::pin::Pin;
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Instant, Duration};
 
 /// A naive wrapper around [`std::net::UdpSocket`] that implements [`AsyncDatagramSocket`].
 ///
@@ -91,8 +91,13 @@ impl AllowStdUdpSocket {
             let mut lock = self.1.lock().expect("Lock failed");
             let opt_mut: &mut Option<Delay> = &mut lock;
 
-            *opt_mut = Some(Delay::new(d));
-            delay = opt_mut.as_mut().unwrap();
+            if opt_mut.is_none() {
+                *opt_mut = Some(Delay::new(d));
+                delay = opt_mut.as_mut().unwrap();
+            } else {
+                delay = opt_mut.as_mut().unwrap();
+                delay.reset(Instant::now() + d);
+            }
 
             let _ = Pin::new(delay).poll(cx);
         }

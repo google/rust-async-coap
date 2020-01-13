@@ -134,7 +134,11 @@ where
 
     fn update_timeout(&mut self, d: Option<Duration>) {
         if let Some(d) = d {
-            self.delay = Some(Delay::new(d));
+            if let Some(delay) = self.delay.as_mut() {
+                delay.reset(Instant::now() + d);
+            } else {
+                self.delay = Some(Delay::new(d));
+            }
         } else {
             self.delay = None;
         }
