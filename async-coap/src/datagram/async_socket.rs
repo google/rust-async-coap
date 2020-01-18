@@ -15,8 +15,7 @@
 
 use super::*;
 use futures::prelude::*;
-use futures::task::Context;
-use futures::Poll;
+use futures::task::{Context, Poll};
 use std::pin::Pin;
 
 /// A trait for asynchronous datagram sockets.

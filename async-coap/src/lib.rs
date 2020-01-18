@@ -48,7 +48,6 @@
 //! This similarly straightforward to do with *async-coap*:
 //!
 //! ```
-//! # #![feature(async_await)]
 //! # use std::sync::Arc;
 //! # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! # use async_coap::prelude::*;
@@ -94,7 +93,6 @@
 //! convenient. The *async-coap* way to do it is similarly convenient:
 //!
 //! ```
-//! # #![feature(async_await)]
 //! # use std::sync::Arc;
 //! # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! # use async_coap::prelude::*;
@@ -138,7 +136,6 @@
 //! [`inspect`]: send_desc::SendDescExt::inspect
 //!
 //! ```
-//! # #![feature(async_await)]
 //! # use std::sync::Arc;
 //! # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! # use async_coap::prelude::*;
@@ -183,7 +180,6 @@
 //! This allows us to collect all of the responses:
 //!
 //! ```no_run
-//! # #![feature(async_await)]
 //! # use std::sync::Arc;
 //! # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! # use async_coap::prelude::*;
@@ -191,7 +187,7 @@
 //! # use async_coap::null::NullLocalEndpoint;
 //! # use async_coap::message::MessageDisplay;
 //! # use async_coap::Error;
-//! # use futures_timer::TryFutureExt;
+//! # use futures::future::TryFutureExt;
 //! # use std::time::Duration;
 //! # let socket = AllowStdUdpSocket::bind("[::]:0").expect("UDP bind failed");
 //! # let local_endpoint = Arc::new(DatagramLocalEndpoint::new(socket));
@@ -256,8 +252,6 @@
 //! ## Full Example
 //!
 //! ```
-//! # #![feature(async_await)]
-//! #
 //! use std::sync::Arc;
 //! use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};
 //! use async_coap::prelude::*;
@@ -317,7 +311,6 @@
 //!
 //! [send-desc]: send_desc/index.html
 
-#![feature(async_await)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(rust_2018_idioms)]
 #![warn(missing_debug_implementations)]

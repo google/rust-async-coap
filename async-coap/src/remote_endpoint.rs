@@ -21,7 +21,6 @@ use crate::UriBuf;
 /// # Example
 ///
 /// ```
-/// # #![feature(async_await)]
 /// #
 /// # use std::sync::Arc;
 /// # use futures::{prelude::*,executor::LocalPool,task::LocalSpawnExt};

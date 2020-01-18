@@ -26,6 +26,6 @@ rand = "0.6"
 num = "0.2"
 regex = "1.1"
 pin-utils = "0.1.0-alpha.4"
-futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly"] }
-futures-timer = "0.3"
+futures = {version = "0.3", features=["default", "thread-pool"]}
+futures-timer = "2.0"
 async-coap-uri = { path = "../async-coap-uri", version = "0.1.0" }

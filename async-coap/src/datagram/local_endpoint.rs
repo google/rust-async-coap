@@ -338,12 +338,12 @@ impl<US: AsyncDatagramSocket> LocalEndpoint for DatagramLocalEndpoint<US> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::message::MessageDisplay;
+    use crate::message::{MessageDisplay, MessageRead};
     use crate::ContentFormat;
     use futures::executor::block_on;
     use futures::future::select;
     use futures::future::Either;
-    use futures_timer::TryFutureExt;
+    use futures_timer::Delay;
     use std::time::Duration;
 
     fn test_process_request<LE, F, R>(local_endpoint: &LE, future: F) -> R
@@ -517,8 +517,16 @@ mod tests {
             });
 
         let future = remote_endpoint
-            .send(send_desc)
-            .timeout(Duration::from_secs(5));
+            .send(send_desc);
+
+        let future = select(future, Delay::new(Duration::new(5, 0)))
+            .map(|f| {
+                if let Either::Left(x) = f {
+                    x.0
+                }else{
+                    Err(Error::ResponseTimeout)
+                }
+            });
 
         let result = test_process_request(&local_endpoint, future);
         assert!(result.is_ok(), "{:?}", result);

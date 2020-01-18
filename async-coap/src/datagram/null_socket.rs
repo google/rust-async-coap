@@ -14,8 +14,7 @@
 //
 
 use super::*;
-use futures::task::Context;
-use futures::Poll;
+use futures::task::{Context, Poll};
 use std::fmt::{Debug, Display, Formatter};
 use std::pin::Pin;
 

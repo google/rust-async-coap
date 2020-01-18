@@ -13,9 +13,9 @@ readme = "README.md"
 
 [dependencies]
 async-coap = { path = "../async-coap", version = "0.1" }
-tokio-net = "0.2.0-alpha.4"
+tokio = {version = "0.2", features = ["net"]}
 mio = "0.6"
-futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly"] }
+futures = "0.3"
 
 [dev-dependencies]
-tokio = "0.2.0-alpha.4"
+tokio = {version = "0.2", features = ["rt-core", "macros"]}
