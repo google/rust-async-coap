@@ -19,7 +19,7 @@ use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex, Weak};
 
 pub(crate) trait HandleResponse<IC: InboundContext>: Send {
-    fn handle_response(&mut self, context: Result<&IC, Error>);
+    fn handle_response(&mut self, context: Result<&IC, Error>) -> bool;
 }
 
 pub(super) trait ResponseTracker<IC: InboundContext> {
@@ -73,23 +73,37 @@ impl<IC: InboundContext> UdpResponseTracker<IC> {
             debug!("Matched response on msgid");
             if let Some(mutex) = weak.upgrade() {
                 let mut handler = mutex.lock().expect("lock failure");
-                handler.handle_response(Ok(context));
+                let finished = handler.handle_response(Ok(context));
+                if finished {
+                    self.remove_by_token(message.msg_token(), socket_addr);
+                }
+
                 return true;
             }
         } else if let Some(weak) = self
             .msg_token_map
-            .remove(&(message.msg_token(), Some(socket_addr)))
-            .or(self.msg_token_map.remove(&(message.msg_token(), None)))
+            .get(&(message.msg_token(), Some(socket_addr)))
+            .or(self.msg_token_map.get(&(message.msg_token(), None)))
         {
             debug!("Matched response on token");
             if let Some(mutex) = weak.upgrade() {
                 let mut handler = mutex.lock().expect("lock failure");
-                handler.handle_response(Ok(context));
+                let finished = handler.handle_response(Ok(context));
+                if finished {
+                    self.remove_by_token(message.msg_token(), socket_addr);
+                }
+
                 return true;
             }
         }
         debug!("Response did not match.");
         false
+    }
+
+    fn remove_by_token(&mut self, token: MsgToken, socket_addr: IC::SocketAddr) {
+        self.msg_token_map
+            .remove(&(token, Some(socket_addr)))
+            .or(self.msg_token_map.remove(&(token, None)));
     }
 }
 

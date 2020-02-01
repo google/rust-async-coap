@@ -274,7 +274,7 @@ where
     US: AsyncDatagramSocket,
     TP: TransParams,
 {
-    fn handle_response(&mut self, context: Result<&DatagramInboundContext<US::SocketAddr>, Error>) {
+    fn handle_response(&mut self, context: Result<&DatagramInboundContext<US::SocketAddr>, Error>) -> bool {
         // This should only be called if we are waiting for a response.
         assert!(self.state().is_waiting(), "Invalid state: {}", self.state());
 
@@ -292,7 +292,7 @@ where
                 let d = self.send_desc.max_rtt();
                 self.update_timeout(Some(d));
                 self.wake();
-                return;
+                return self.state.is_finished();
             }
         }
 
@@ -319,6 +319,8 @@ where
         }
 
         self.wake();
+
+        self.state.is_finished()
     }
 }
 
