@@ -15,6 +15,7 @@
 
 use super::*;
 use std::ops::Deref;
+use std::str::FromStr;
 
 /// Sized, heap-allocated string type containing either a URI or a relative-reference.
 ///
@@ -28,6 +29,13 @@ pub struct UriRefBuf(pub(super) String);
 
 _impl_uri_buf_traits_base!(UriRefBuf, UriRef);
 
+impl FromStr for UriRefBuf {
+    type Err = ParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Self::from_str(input)
+    }
+}
 impl Default for UriRefBuf {
     fn default() -> Self {
         Self::new()
@@ -601,6 +609,11 @@ mod tests {
 
     #[test]
     fn test_from_str() {
+        assert_eq!(
+            <UriRefBuf as FromStr>::from_str("https://www.google.com/"),
+            UriRefBuf::from_str("https://www.google.com/")
+        );
+
         assert!(UriRefBuf::from_str("http://example.com/").is_ok());
     }
 
