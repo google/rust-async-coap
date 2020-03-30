@@ -14,6 +14,7 @@
 //
 
 use super::*;
+use std::convert::TryFrom;
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -36,6 +37,31 @@ impl FromStr for UriRefBuf {
         Self::from_str(input)
     }
 }
+
+impl TryFrom<&str> for UriRefBuf {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
+impl TryFrom<String> for UriRefBuf {
+    type Error = ParseError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_string(value)
+    }
+}
+
+impl<'a> TryFrom<&'a String> for UriRefBuf {
+    type Error = <Self as TryFrom<&'a str>>::Error;
+
+    fn try_from(value: &'a String) -> Result<Self, Self::Error> {
+        <Self as TryFrom<&'a str>>::try_from(value.as_str())
+    }
+}
+
 impl Default for UriRefBuf {
     fn default() -> Self {
         Self::new()
@@ -606,6 +632,24 @@ macro_rules! inherits_uri_ref_buf {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_try_from() {
+        assert_eq!(
+            UriRefBuf::try_from("https://www.google.com/"),
+            UriRefBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriRefBuf::try_from("https://www.google.com/".to_string()),
+            UriRefBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriRefBuf::try_from(&"https://www.google.com/".to_string()),
+            UriRefBuf::try_from("https://www.google.com/"),
+        );
+    }
 
     #[test]
     fn test_from_str() {
