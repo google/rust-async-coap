@@ -110,7 +110,7 @@ impl AnyUriRef for UriRawComponents<'_> {
             }
         }
 
-        return UriType::RelativePath;
+        UriType::RelativePath
     }
 }
 
@@ -257,7 +257,7 @@ impl<'a> UriRawComponents<'a> {
         if self.path.is_empty() {
             let mut ret = "".split('/');
             let _ = ret.next();
-            return ret;
+            ret
         } else {
             self.path.split('/')
         }

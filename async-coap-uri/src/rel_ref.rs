@@ -142,13 +142,13 @@ impl AnyUriRef for RelRef {
     /// * [`UriType::RelativePath`](enum.UriType.html#variant.RelativePath)
     fn uri_type(&self) -> UriType {
         if self.starts_with('#') {
-            return UriType::Fragment;
+            UriType::Fragment
         } else if self.starts_with('?') {
-            return UriType::Query;
+            UriType::Query
         } else if self.starts_with('/') {
-            return UriType::AbsolutePath;
+            UriType::AbsolutePath
         } else {
-            return UriType::RelativePath;
+            UriType::RelativePath
         }
     }
 
@@ -179,10 +179,10 @@ impl RelRef {
     /// if the string slice contains data that is not a valid relative-reference.
     pub fn from_str(s: &str) -> Result<&RelRef, ParseError> {
         if let Some(first_error) = s.unescape_uri().first_error() {
-            return Err(ParseError::new(
+            Err(ParseError::new(
                 "Bad percent encoding or illegal characters",
                 Some(first_error..first_error + 1),
-            ));
+            ))
         } else {
             Ok(unsafe { Self::from_str_unchecked(s.as_ref()) })
         }
@@ -383,7 +383,7 @@ impl RelRef {
 
         ret.disambiguate();
 
-        return ret;
+        ret
     }
 }
 

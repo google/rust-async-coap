@@ -152,7 +152,7 @@ impl AnyUriRef for UriRef {
             }
         }
 
-        return UriType::RelativePath;
+        UriType::RelativePath
     }
 
     fn components(&self) -> UriRawComponents<'_> {
@@ -631,7 +631,7 @@ impl UriRef {
             None => {
                 let mut ret = "".split(pattern);
                 let _ = ret.next();
-                return ret;
+                ret
             }
         }
     }
