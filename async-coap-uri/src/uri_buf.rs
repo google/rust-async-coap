@@ -16,6 +16,7 @@
 use super::*;
 use std::fmt::Write;
 use std::ops::Deref;
+use std::str::FromStr;
 
 /// Sized, heap-allocated string type guaranteed to contain a well-formed [IETF-RFC3986] URI
 /// or [network path](enum.UriType.html#variant.NetworkPath).
@@ -51,6 +52,13 @@ impl From<&Uri> for UriBuf {
     }
 }
 
+impl FromStr for UriBuf {
+    type Err = ParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Self::from_str(input)
+    }
+}
 impl std::fmt::Display for UriBuf {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         self.write_to(f)
@@ -297,3 +305,16 @@ impl UriBuf {
 }
 
 inherits_uri_ref_buf!(UriBuf);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_str() {
+        assert_eq!(
+            <UriBuf as FromStr>::from_str("https://www.google.com/"),
+            UriBuf::from_str("https://www.google.com/")
+        );
+    }
+}
