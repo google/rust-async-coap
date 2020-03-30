@@ -274,7 +274,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::raw_path_segments`] for more information.
-    #[must_use]
     pub fn raw_path_segments(&self) -> impl Iterator<Item = &str> {
         let path = self.path_as_rel_ref();
 
@@ -292,14 +291,12 @@ impl RelRef {
     }
 
     /// See [`UriRef::raw_query_items`] for more information.
-    #[must_use]
     #[inline(always)]
     pub fn raw_query_items(&self) -> impl Iterator<Item = &str> {
         self.0.raw_query_items()
     }
 
     /// See [`UriRef::raw_query_key_values`] for more information.
-    #[must_use]
     #[inline(always)]
     pub fn raw_query_key_values(&self) -> impl Iterator<Item = (&str, &str)> {
         self.0.raw_query_key_values()
@@ -314,7 +311,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::path_segments`] for more information.
-    #[must_use]
     #[cfg(feature = "std")]
     #[inline(always)]
     pub fn path_segments(&self) -> impl Iterator<Item = Cow<'_, str>> {
@@ -322,7 +318,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::query_items`] for more information.
-    #[must_use]
     #[cfg(feature = "std")]
     #[inline(always)]
     pub fn query_items(&self) -> impl Iterator<Item = Cow<'_, str>> {
@@ -330,7 +325,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::query_key_values`] for more information.
-    #[must_use]
     #[cfg(feature = "std")]
     #[inline(always)]
     pub fn query_key_values(&self) -> impl Iterator<Item = (Cow<'_, str>, Cow<'_, str>)> {
@@ -619,7 +613,6 @@ impl RelRef {
     /// held `self` is no longer accessed directly. See [`UriUnescapeBuf`] for an example.
     ///
     /// [`raw_path_segment_iter()`]: #method.raw_path_segment_iter
-    #[must_use]
     pub unsafe fn unsafe_path_segment_iter(&mut self) -> impl Iterator<Item = &str> {
         let path = self.path_as_rel_ref_mut();
         let is_empty = path.is_empty();
@@ -654,7 +647,6 @@ impl RelRef {
     /// owner) is never directly used again. See [`UriUnescapeBuf`] for an example.
     ///
     /// [`raw_query_item_iter()`]: #method.raw_query_item_iter
-    #[must_use]
     pub unsafe fn unsafe_query_item_iter(&mut self) -> impl Iterator<Item = &str> {
         let query = self.query_as_rel_ref_mut().unwrap_or(Default::default());
         let is_empty = query.is_empty();

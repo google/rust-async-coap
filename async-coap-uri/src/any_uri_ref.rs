@@ -299,7 +299,6 @@ pub trait AnyUriRefExt: AnyUriRef {
     /// Creates a new [`UriRefBuf`] that contains the result of performing URI resolution with
     /// `dest`.
     #[cfg(feature = "std")]
-    #[must_use]
     fn resolved<T: AnyUriRef + ?Sized>(&self, dest: &T) -> Result<UriRefBuf, ResolveError> {
         if dest.is_empty() {
             return Ok(self.to_uri_ref_buf());
