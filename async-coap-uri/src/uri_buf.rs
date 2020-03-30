@@ -14,6 +14,7 @@
 //
 
 use super::*;
+use std::convert::TryFrom;
 use std::fmt::Write;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -59,6 +60,31 @@ impl FromStr for UriBuf {
         Self::from_str(input)
     }
 }
+
+impl TryFrom<&str> for UriBuf {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
+impl TryFrom<String> for UriBuf {
+    type Error = ParseError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_string(value)
+    }
+}
+
+impl<'a> TryFrom<&'a String> for UriBuf {
+    type Error = <Self as TryFrom<&'a str>>::Error;
+
+    fn try_from(value: &'a String) -> Result<Self, Self::Error> {
+        <Self as TryFrom<&'a str>>::try_from(value.as_str())
+    }
+}
+
 impl std::fmt::Display for UriBuf {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         self.write_to(f)
@@ -315,6 +341,24 @@ mod tests {
         assert_eq!(
             <UriBuf as FromStr>::from_str("https://www.google.com/"),
             UriBuf::from_str("https://www.google.com/")
+        );
+    }
+
+    #[test]
+    fn test_try_from() {
+        assert_eq!(
+            UriBuf::try_from("https://www.google.com/"),
+            UriBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriBuf::try_from("https://www.google.com/".to_string()),
+            UriBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriBuf::try_from(&"https://www.google.com/".to_string()),
+            UriBuf::try_from("https://www.google.com/"),
         );
     }
 }
