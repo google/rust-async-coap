@@ -22,12 +22,13 @@ use std::str::FromStr;
 /// Sized, heap-allocated string type guaranteed to contain a well-formed [IETF-RFC3986] URI
 /// or [network path](enum.UriType.html#variant.NetworkPath).
 ///
-/// The unsized counterpart is [`Uri`](crate::Uri).
+/// The unsized counterpart is [`Uri`].
 ///
-/// This type implements [`std::ops::Deref<Uri>`], so you can also use all of the
+/// This type implements [`Deref<Target = Uri>`], so you can also use all of the
 /// methods from [`Uri`] on this type.
 ///
 /// [IETF-RFC3986]: https://tools.ietf.org/html/rfc3986
+/// [`Deref<Target = Uri>`]: std::ops::Deref
 #[derive(Clone, Eq, Hash)]
 pub struct UriBuf(pub(super) UriRefBuf);
 
