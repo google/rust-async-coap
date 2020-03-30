@@ -112,17 +112,16 @@ impl Uri {
     /// assert_eq!(Uri::from_str("http://example.com"), Ok(uri!("http://example.com")));
     /// assert!(Uri::from_str("/a/b/c").is_err());
     /// ```
-    pub fn from_str(s: &str) -> Result<&Uri, ParseError> {
-        let str_ref = s.as_ref();
+    pub fn from_str(input: &str) -> Result<&Uri, ParseError> {
         // TODO(#10): Replace this with an optimized validity check.
         //       We are currently using `UriRawComponents::from_str()` as a crutch here;
         //       it includes extraneous operations that are not related to verifying if a
         //       URI is well-formed.
-        if UriRawComponents::from_str(str_ref)?
+        if UriRawComponents::from_str(input)?
             .uri_type()
             .can_borrow_as_uri()
         {
-            Ok(unsafe { Self::from_str_unchecked(s.as_ref()) })
+            Ok(unsafe { Self::from_str_unchecked(input) })
         } else {
             Err(ParseError::new("Not a URI", None))
         }
@@ -154,7 +153,8 @@ impl Uri {
                 return true;
             }
         }
-        return false;
+
+        false
     }
 
     /// Reinterpret this [`&Uri`][Uri] as a [`&UriRef`][UriRef].

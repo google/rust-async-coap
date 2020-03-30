@@ -15,7 +15,7 @@
 
 use super::*;
 
-use std::fmt::{Display, Formatter};
+use std::fmt;
 use std::str::FromStr;
 
 /// Struct that holds parsed URI components.
@@ -44,10 +44,7 @@ impl AnyUriRef for UriRawComponents<'_> {
     /// Note that the implementation of this method for [`UriRawComponents`] ignores
     /// the value of `self.userinfo`, `self.host`, and `self.port`; instead relying entirely
     /// on `self.authority`.
-    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
-        &self,
-        f: &mut T,
-    ) -> Result<(), core::fmt::Error> {
+    unsafe fn write_to_unsafe<T: fmt::Write + ?Sized>(&self, f: &mut T) -> fmt::Result {
         // Note that everything in `self` is already escaped, so we
         // don't need to do that here.
         if let Some(scheme) = self.scheme {
@@ -84,7 +81,7 @@ impl AnyUriRef for UriRawComponents<'_> {
     }
 
     fn components(&self) -> UriRawComponents<'_> {
-        self.clone()
+        *self
     }
 
     fn uri_type(&self) -> UriType {
@@ -114,8 +111,8 @@ impl AnyUriRef for UriRawComponents<'_> {
     }
 }
 
-impl Display for UriRawComponents<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for UriRawComponents<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write_to(f)
     }
 }
@@ -349,7 +346,7 @@ impl<'a> UriRawComponents<'a> {
     pub fn trim_leading_dot_slashes(&self) -> Self {
         UriRawComponents {
             path: self.path_as_rel_ref().trim_leading_dot_slashes(),
-            ..self.clone()
+            ..*self
         }
     }
 
@@ -359,7 +356,7 @@ impl<'a> UriRawComponents<'a> {
         UriRawComponents {
             query: None,
             fragment: None,
-            ..self.clone()
+            ..*self
         }
     }
 
@@ -368,7 +365,7 @@ impl<'a> UriRawComponents<'a> {
     pub fn trim_fragment(&self) -> Self {
         UriRawComponents {
             fragment: None,
-            ..self.clone()
+            ..*self
         }
     }
 }

@@ -206,8 +206,8 @@ pub trait AnyUriRefExt: AnyUriRef {
         let target_path = target_components.path_as_rel_ref();
 
         if !target_path.is_empty() || !target_type.has_absolute_path() {
-            let target_starts_with_slash = target_path.starts_with("/");
-            let base_starts_with_slash = base_path.starts_with("/");
+            let target_starts_with_slash = target_path.starts_with('/');
+            let base_starts_with_slash = base_path.starts_with('/');
 
             if target_type.has_absolute_path() {
                 if base_starts_with_slash {
@@ -232,7 +232,7 @@ pub trait AnyUriRefExt: AnyUriRef {
             for seg in seg_iter {
                 match seg {
                     "." => {
-                        let last = out_path_vec.last().map(|x| *x);
+                        let last = out_path_vec.last().copied();
 
                         if last.map(str::is_empty) == Some(false) {
                             out_path_vec.push("");
@@ -259,7 +259,7 @@ pub trait AnyUriRefExt: AnyUriRef {
                         };
                     }
                     seg => {
-                        match out_path_vec.last().map(|x| *x) {
+                        match out_path_vec.last().copied() {
                             Some(".") if seg.is_empty() => continue,
                             Some(".") | Some("") => {
                                 out_path_vec.pop();

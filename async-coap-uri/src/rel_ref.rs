@@ -14,7 +14,9 @@
 //
 
 use super::*;
+use std::fmt;
 use std::ops::Deref;
+use std::ptr;
 
 /// Unsized string-slice type guaranteed to contain a well-formed [IETF-RFC3986] [relative reference].
 ///
@@ -106,7 +108,7 @@ impl Default for &mut RelRef {
         use std::str::from_utf8_unchecked_mut;
         unsafe {
             // SAFETY: An empty slice is pretty harmless, mutable or not.
-            let empty_slice = from_raw_parts_mut(0usize as *mut u8, 0);
+            let empty_slice = from_raw_parts_mut(ptr::null_mut::<u8>(), 0);
             let empty_string = from_utf8_unchecked_mut(empty_slice);
             RelRef::from_str_unchecked_mut(empty_string)
         }
@@ -114,10 +116,7 @@ impl Default for &mut RelRef {
 }
 
 impl AnyUriRef for RelRef {
-    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
-        &self,
-        write: &mut T,
-    ) -> Result<(), core::fmt::Error> {
+    unsafe fn write_to_unsafe<T: fmt::Write + ?Sized>(&self, write: &mut T) -> fmt::Result {
         if let Some(i) = self.colon_in_first_path_segment() {
             write!(write, "{}%3A{}", &self[..i], &self[i + 1..])
         } else {
@@ -168,8 +167,8 @@ impl AnyUriRef for RelRef {
 }
 
 /// RelRef will always format the relative reference for display in an unambiguous fashion.
-impl std::fmt::Display for RelRef {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+impl fmt::Display for RelRef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write_to(f)
     }
 }
@@ -184,7 +183,7 @@ impl RelRef {
                 Some(first_error..first_error + 1),
             ))
         } else {
-            Ok(unsafe { Self::from_str_unchecked(s.as_ref()) })
+            Ok(unsafe { Self::from_str_unchecked(s) })
         }
     }
 
@@ -281,7 +280,7 @@ impl RelRef {
         if path.is_empty() {
             // Skip non-existant segments
             let _ = ret.next();
-        } else if path.starts_with("/") {
+        } else if path.starts_with('/') {
             // Skip leading slash.
             let _ = ret.next();
         }
@@ -615,7 +614,7 @@ impl RelRef {
     pub unsafe fn unsafe_path_segment_iter(&mut self) -> impl Iterator<Item = &str> {
         let path = self.path_as_rel_ref_mut();
         let is_empty = path.is_empty();
-        let starts_with_slash = path.starts_with("/");
+        let starts_with_slash = path.starts_with('/');
 
         let mut_bytes = path.as_mut_str().as_bytes_mut();
 
@@ -647,13 +646,13 @@ impl RelRef {
     ///
     /// [`raw_query_item_iter()`]: #method.raw_query_item_iter
     pub unsafe fn unsafe_query_item_iter(&mut self) -> impl Iterator<Item = &str> {
-        let query = self.query_as_rel_ref_mut().unwrap_or(Default::default());
+        let query = self.query_as_rel_ref_mut().unwrap_or_default();
         let is_empty = query.is_empty();
         let starts_with_delim = query.starts_with(|c| c == '&' || c == ';');
 
         let mut mut_bytes = query.as_mut_str().as_bytes_mut();
 
-        if is_empty == false && mut_bytes[0] == b'?' {
+        if !is_empty && mut_bytes[0] == b'?' {
             mut_bytes = &mut mut_bytes[1..];
         }
 

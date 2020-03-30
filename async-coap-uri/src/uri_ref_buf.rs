@@ -137,7 +137,7 @@ impl UriRefBuf {
     /// assert_eq!("another", uri.as_str());
     /// ```
     pub fn truncate_query(&mut self) {
-        if let Some(i) = self.query_start().or(self.fragment_start()) {
+        if let Some(i) = self.query_start().or_else(|| self.fragment_start()) {
             self.0.truncate(i)
         }
     }
@@ -365,11 +365,13 @@ impl UriRefBuf {
     /// ```
     pub fn push_query_item(&mut self, item: &str) {
         self.truncate_fragment();
-        if let Some(_) = self.query_start() {
+
+        if self.query_start().is_some() {
             self.0.push('&');
         } else {
             self.0.push('?');
         }
+
         self.0.extend(item.escape_uri().for_query());
     }
 
@@ -397,11 +399,13 @@ impl UriRefBuf {
     /// ```
     pub fn push_query_key_value(&mut self, key: &str, value: &str) {
         self.truncate_fragment();
-        if let Some(_) = self.query_start() {
+
+        if self.query_start().is_some() {
             self.0.push('&');
         } else {
             self.0.push('?');
         }
+
         self.0.extend(key.escape_uri().for_query());
         self.0.push('=');
         self.0.extend(value.escape_uri().for_query());
@@ -410,6 +414,7 @@ impl UriRefBuf {
     /// Replaces the path, query, and fragment with that from `rel`.
     pub fn replace_path(&mut self, rel: &RelRef) {
         self.truncate_path();
+
         if !rel.starts_with(|c| c == '/' || c == '?' || c == '#') {
             self.add_trailing_slash();
         }

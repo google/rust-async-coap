@@ -105,7 +105,7 @@ impl Default for &mut UriRef {
         use std::str::from_utf8_unchecked_mut;
         unsafe {
             // SAFETY: An empty slice is pretty harmless, mutable or not.
-            let empty_slice = from_raw_parts_mut(0usize as *mut u8, 0);
+            let empty_slice = from_raw_parts_mut(::core::ptr::null_mut::<u8>(), 0);
             let empty_string = from_utf8_unchecked_mut(empty_slice);
             UriRef::from_str_unchecked_mut(empty_string)
         }
@@ -180,7 +180,7 @@ impl UriRef {
     /// ```
     pub fn from_str(s: &str) -> Result<&UriRef, ParseError> {
         UriRawComponents::from_str(s)?;
-        Ok(unsafe { Self::from_str_unchecked(s.as_ref()) })
+        Ok(unsafe { Self::from_str_unchecked(s) })
     }
 
     /// Determines if the given string can be considered a valid URI reference.
@@ -929,10 +929,8 @@ impl UriRef {
         let (base_abs_part, base_rel_part) = base.trim_resource().split();
         let (self_abs_part, self_rel_part) = self.split();
 
-        if self_abs_part.is_some() {
-            if base_abs_part.is_none() || base_abs_part != self_abs_part {
-                return None;
-            }
+        if self_abs_part.is_some() && (base_abs_part.is_none() || base_abs_part != self_abs_part) {
+            return None;
         }
 
         if self_rel_part.starts_with(base_rel_part.as_str()) {

@@ -99,9 +99,7 @@ impl UriBuf {
             path = &path[1..];
         }
 
-        let path_segment_iter =
-            path.split('/')
-                .filter_map(|seg| if seg == "." { None } else { Some(seg) });
+        let path_segment_iter = path.split('/').filter(|seg| *seg != ".");
 
         for seg in path_segment_iter {
             ret.push('/');
