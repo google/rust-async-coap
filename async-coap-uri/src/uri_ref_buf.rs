@@ -120,27 +120,21 @@ impl UriRefBuf {
     ///
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh?query").to_uri_ref_buf();
-    ///     uri.truncate_query();
-    ///     assert_eq!("http://example.com/blah/bleh", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh?query").to_uri_ref_buf();
+    /// uri.truncate_query();
+    /// assert_eq!("http://example.com/blah/bleh", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh#foobar").to_uri_ref_buf();
-    ///     uri.truncate_query();
-    ///     assert_eq!("http://example.com/blah/bleh", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh#foobar").to_uri_ref_buf();
+    /// uri.truncate_query();
+    /// assert_eq!("http://example.com/blah/bleh", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("another?foo#bar").to_uri_ref_buf();
-    ///     uri.truncate_query();
-    ///     assert_eq!("another", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("another?foo#bar").to_uri_ref_buf();
+    /// uri.truncate_query();
+    /// assert_eq!("another", uri.as_str());
     /// ```
     pub fn truncate_query(&mut self) {
         if let Some(i) = self.query_start().or(self.fragment_start()) {
@@ -159,27 +153,21 @@ impl UriRefBuf {
     ///
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
-    ///     uri.truncate_resource();
-    ///     assert_eq!("http://example.com/blah/", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
+    /// uri.truncate_resource();
+    /// assert_eq!("http://example.com/blah/", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/").to_uri_ref_buf();
-    ///     uri.truncate_resource();
-    ///     assert_eq!("http://example.com/blah/", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/").to_uri_ref_buf();
+    /// uri.truncate_resource();
+    /// assert_eq!("http://example.com/blah/", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
-    ///     uri.truncate_resource();
-    ///     assert_eq!("", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
+    /// uri.truncate_resource();
+    /// assert_eq!("", uri.as_str());
     /// ```
     /// * `http://example.com/blah/bleh` becomes `http://example.com/blah/`
     /// * `http://example.com/blah/` becomes `http://example.com/blah/`
@@ -206,23 +194,19 @@ impl UriRefBuf {
     ///
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("http://example.com/blah/", uri.as_str());
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("http://example.com/", uri.as_str());
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("http://example.com/", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("http://example.com/blah/", uri.as_str());
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("http://example.com/", uri.as_str());
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("http://example.com/", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("./", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("./", uri.as_str());
     /// ```
     /// * `http://example.com/blah/bleh` becomes `http://example.com/blah/`
     /// * `http://example.com/blah/` becomes `http://example.com/`

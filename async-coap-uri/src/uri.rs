@@ -25,14 +25,13 @@ use std::ops::Deref;
 ///
 /// ```
 /// # use async_coap_uri::*;
-/// # fn main() {
-///     let uri = uri!("http://example.com/test");
-///     let components = uri.components();
-///     assert_eq!(Some("http"),        components.scheme());
-///     assert_eq!(Some("example.com"), components.raw_host());
-///     assert_eq!(None,                components.port());
-///     assert_eq!("/test",             components.raw_path());
-/// # }
+/// let uri = uri!("http://example.com/test");
+/// let components = uri.components();
+///
+/// assert_eq!(Some("http"),        components.scheme());
+/// assert_eq!(Some("example.com"), components.raw_host());
+/// assert_eq!(None,                components.port());
+/// assert_eq!("/test",             components.raw_path());
 /// ```
 ///
 /// [`uri!`]: macro.uri.html

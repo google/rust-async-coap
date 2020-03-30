@@ -186,26 +186,25 @@ impl RelRefBuf {
     ///
     /// ```compile_fail
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = rel_ref!("this:is/fun/bl%c3%a5b%c3%a6rsyltet%c3%b8y").to_owned();
-    ///     let first_part;
-    ///     let second_part;
-    ///     {
-    ///         // This line takes ownership of `uri`...
-    ///         let mut path_set = uri.into_unescape_buf();
-    ///         let mut iter = path_set.path_segments();
+    /// #
+    /// let mut uri = rel_ref!("this:is/fun/bl%c3%a5b%c3%a6rsyltet%c3%b8y").to_owned();
+    /// let first_part;
+    /// let second_part;
+    /// {
+    ///     // This line takes ownership of `uri`...
+    ///     let mut path_set = uri.into_unescape_buf();
+    ///     let mut iter = path_set.path_segments();
     ///
-    ///         // ...so these string slices will be valid
-    ///         // for the lifetime of `iter`.
-    ///         first_part = iter.next().unwrap();
-    ///         second_part = iter.next().unwrap();
-    ///     }
-    ///     // Iter has been dropped at this point, but the next
-    ///     // line uses both `first_part` and `second_part`---so
-    ///     // the compiler will flag an error. If it does compile,
-    ///     // it represents a use-after-free error.
-    ///     panic!("This should not have compiled! {} {}", first_part, second_part);
-    /// # }
+    ///     // ...so these string slices will be valid
+    ///     // for the lifetime of `iter`.
+    ///     first_part = iter.next().unwrap();
+    ///     second_part = iter.next().unwrap();
+    /// }
+    /// // Iter has been dropped at this point, but the next
+    /// // line uses both `first_part` and `second_part`---so
+    /// // the compiler will flag an error. If it does compile,
+    /// // it represents a use-after-free error.
+    /// panic!("This should not have compiled! {} {}", first_part, second_part);
     /// ```
     #[must_use]
     pub fn into_unescape_buf(self) -> UriUnescapeBuf {

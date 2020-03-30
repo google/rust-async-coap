@@ -33,15 +33,14 @@ use std::ops::Deref;
 ///
 /// ```
 /// # use async_coap_uri::*;
-/// # fn main() {
-///     let uri = rel_ref!("/test?query");
-///     let components = uri.components();
-///     assert_eq!(None,          components.scheme());
-///     assert_eq!(None,          components.raw_host());
-///     assert_eq!(None,          components.port());
-///     assert_eq!("/test",       components.raw_path());
-///     assert_eq!(Some("query"), components.raw_query());
-/// # }
+/// let uri = rel_ref!("/test?query");
+/// let components = uri.components();
+///
+/// assert_eq!(None,          components.scheme());
+/// assert_eq!(None,          components.raw_host());
+/// assert_eq!(None,          components.port());
+/// assert_eq!("/test",       components.raw_path());
+/// assert_eq!(Some("query"), components.raw_query());
 /// ```
 ///
 /// ## RelRef and Deref
