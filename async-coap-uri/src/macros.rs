@@ -216,7 +216,7 @@ macro_rules! uri {
 #[cfg(feature = "std")]
 #[macro_export]
 macro_rules! uri_ref_format {
-    ($($arg:tt)*) => ($crate::UriRefBuf::from_string(format!($($arg)*)))
+    ($($arg:tt)*) => ($crate::UriRefBuf::from_string(::std::format!($($arg)*)))
 }
 
 /// Creates a `Option<UriBuf>` from the given string format and arguments.
@@ -225,7 +225,7 @@ macro_rules! uri_ref_format {
 #[cfg(feature = "std")]
 #[macro_export]
 macro_rules! uri_format {
-    ($($arg:tt)*) => ($crate::UriBuf::from_string(format!($($arg)*)))
+    ($($arg:tt)*) => ($crate::UriBuf::from_string(::std::format!($($arg)*)))
 }
 
 /// Creates a `Option<RelRefBuf>` from the given string format and arguments.
@@ -234,47 +234,48 @@ macro_rules! uri_format {
 #[cfg(feature = "std")]
 #[macro_export]
 macro_rules! rel_ref_format {
-    ($($arg:tt)*) => ($crate::RelRefBuf::from_string(format!($($arg)*)))
+    ($($arg:tt)*) => ($crate::RelRefBuf::from_string(::std::format!($($arg)*)))
 }
 
 #[doc(hidden)]
 #[macro_export]
 macro_rules! _impl_uri_traits {
     ( $C:ty ) => {
-        impl<T: AsRef<str> + ?Sized> core::cmp::PartialEq<T> for $C {
+        impl<T: ::core::convert::AsRef<str> + ?::core::marker::Sized> ::core::cmp::PartialEq<T>
+            for $C
+        {
             fn eq(&self, other: &T) -> bool {
-                core::cmp::PartialEq::eq(self.as_str(), other.as_ref())
+                ::core::cmp::PartialEq::eq(self.as_str(), other.as_ref())
             }
         }
 
-        impl<T: AsRef<str> + ?Sized> core::cmp::PartialOrd<T> for $C {
-            fn partial_cmp(&self, other: &T) -> Option<::std::cmp::Ordering> {
-                core::cmp::PartialOrd::partial_cmp(self.as_str(), other.as_ref())
+        impl<T: ::core::convert::AsRef<str> + ?::core::marker::Sized> ::core::cmp::PartialOrd<T>
+            for $C
+        {
+            fn partial_cmp(&self, other: &T) -> ::core::option::Option<::core::cmp::Ordering> {
+                ::core::cmp::PartialOrd::partial_cmp(self.as_str(), other.as_ref())
             }
         }
 
-        impl core::cmp::Ord for $C {
+        impl ::core::cmp::Ord for $C {
             fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
-                core::cmp::Ord::cmp(self.as_str(), other.as_str())
+                ::core::cmp::Ord::cmp(self.as_str(), other.as_str())
             }
         }
 
-        impl std::fmt::Debug for $C {
-            fn fmt(
-                &self,
-                f: &mut std::fmt::Formatter<'_>,
-            ) -> std::result::Result<(), std::fmt::Error> {
+        impl ::core::fmt::Debug for $C {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.write_str(concat!(stringify!($C), "<"))?;
-                std::fmt::Display::fmt(self.as_str(), f)?;
+                ::core::fmt::Display::fmt(self.as_str(), f)?;
                 f.write_str(">")
             }
         }
-        impl AsRef<str> for $C {
+        impl ::core::convert::AsRef<str> for $C {
             fn as_ref(&self) -> &str {
                 self.as_str()
             }
         }
-        impl AsRef<$C> for $C {
+        impl ::core::convert::AsRef<$C> for $C {
             fn as_ref(&self) -> &$C {
                 &self
             }
@@ -288,15 +289,17 @@ macro_rules! _impl_uri_traits_base {
     ( $C:ty ) => {
         _impl_uri_traits!($C);
 
-        impl core::convert::From<&$C> for std::string::String {
+        impl ::core::convert::From<&$C> for ::std::string::String {
             fn from(x: &$C) -> Self {
-                String::from(&x.0)
+                ::std::string::String::from(&x.0)
             }
         }
 
-        impl core::convert::From<&$C> for $crate::UriRefBuf {
+        impl ::core::convert::From<&$C> for $crate::UriRefBuf {
             fn from(x: &$C) -> Self {
-                unsafe { $crate::UriRefBuf::from_string_unchecked(String::from(&x.0)) }
+                unsafe {
+                    $crate::UriRefBuf::from_string_unchecked(::std::string::String::from(&x.0))
+                }
             }
         }
     };
@@ -309,7 +312,7 @@ macro_rules! impl_uri_traits {
         _impl_uri_traits_base!($C);
 
         impl $crate::AnyUriRef for $C {
-            fn components(&self) -> UriRawComponents<'_> {
+            fn components(&self) -> $crate::UriRawComponents<'_> {
                 self.0.components()
             }
 
@@ -325,10 +328,10 @@ macro_rules! impl_uri_traits {
                 self.0.to_uri_ref_buf()
             }
 
-            unsafe fn write_to_unsafe<W: core::fmt::Write + ?Sized>(
+            unsafe fn write_to_unsafe<W: ::core::fmt::Write + ?::core::marker::Sized>(
                 &self,
                 write: &mut W,
-            ) -> Result<(), core::fmt::Error> {
+            ) -> ::core::fmt::Result {
                 self.0.write_to_unsafe(write)
             }
         }
@@ -341,63 +344,60 @@ macro_rules! _impl_uri_buf_traits_base {
     ( $C:ty , $B:ty ) => {
         _impl_uri_traits!($C);
 
-        impl core::convert::From<$C> for std::string::String {
+        impl ::core::convert::From<$C> for ::std::string::String {
             fn from(x: $C) -> Self {
-                String::from(x.0)
+                ::std::string::String::from(x.0)
             }
         }
 
-        impl core::convert::From<&$C> for $C {
+        impl ::core::convert::From<&$C> for $C {
             fn from(x: &$C) -> Self {
-                x.clone()
+                <$C as ::core::clone::Clone>::clone(x)
             }
         }
 
-        impl std::borrow::ToOwned for $B {
+        impl ::std::borrow::ToOwned for $B {
             type Owned = $C;
 
             fn to_owned(&self) -> Self::Owned {
-                unsafe { <$C>::from_string_unchecked(self.to_string()) }
+                unsafe {
+                    <$C>::from_string_unchecked(<Self as ::std::string::ToString>::to_string(self))
+                }
             }
         }
 
-        impl core::borrow::Borrow<$B> for $C {
+        impl ::core::borrow::Borrow<$B> for $C {
             fn borrow(&self) -> &$B {
                 unsafe { <$B>::from_str_unchecked(self.as_str()) }
             }
         }
 
         impl $crate::AnyUriRef for $C {
-            fn components(&self) -> UriRawComponents<'_> {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
+            fn components(&self) -> $crate::UriRawComponents<'_> {
+                let b: &$B = <Self as ::core::borrow::Borrow<$B>>::borrow(self);
                 b.components()
             }
 
             fn is_empty(&self) -> bool {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
+                let b: &$B = <Self as ::core::borrow::Borrow<$B>>::borrow(self);
                 b.is_empty()
             }
 
             fn uri_type(&self) -> $crate::UriType {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
+                let b: &$B = <Self as ::core::borrow::Borrow<$B>>::borrow(self);
                 b.uri_type()
             }
 
             fn to_uri_ref_buf(&self) -> $crate::UriRefBuf {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
+                let b: &$B = <Self as ::core::borrow::Borrow<$B>>::borrow(self);
                 b.to_uri_ref_buf()
             }
 
-            unsafe fn write_to_unsafe<W: core::fmt::Write + ?Sized>(
+            unsafe fn write_to_unsafe<W: ::core::fmt::Write + ?::core::marker::Sized>(
                 &self,
                 write: &mut W,
-            ) -> Result<(), core::fmt::Error> {
-                use core::borrow::Borrow;
-                let b: &$B = self.borrow();
+            ) -> ::core::fmt::Result {
+                let b: &$B = <Self as ::core::borrow::Borrow<$B>>::borrow(self);
                 b.write_to_unsafe(write)
             }
         }
@@ -410,21 +410,21 @@ macro_rules! impl_uri_buf_traits {
     ( $C:ty , $B:ty) => {
         _impl_uri_buf_traits_base!($C, $B);
 
-        impl AsRef<std::string::String> for $C {
+        impl ::core::convert::AsRef<::std::string::String> for $C {
             fn as_ref(&self) -> &std::string::String {
-                AsRef::<std::string::String>::as_ref(&self.0)
+                ::core::convert::AsRef::<::std::string::String>::as_ref(&self.0)
             }
         }
 
-        impl AsRef<$crate::UriRefBuf> for $C {
+        impl ::core::convert::AsRef<$crate::UriRefBuf> for $C {
             fn as_ref(&self) -> &$crate::UriRefBuf {
-                AsRef::<$crate::UriRefBuf>::as_ref(&self.0)
+                ::core::convert::AsRef::<$crate::UriRefBuf>::as_ref(&self.0)
             }
         }
 
-        impl core::convert::From<$C> for $crate::UriRefBuf {
+        impl ::core::convert::From<$C> for $crate::UriRefBuf {
             fn from(x: $C) -> Self {
-                x.0.into()
+                ::core::convert::Into::<Self>::into(x.0)
             }
         }
     };
