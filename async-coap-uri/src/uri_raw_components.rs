@@ -440,7 +440,7 @@ mod tests {
     #[test]
     fn components() {
         {
-            let uri = uri_ref!("http://example.com/");
+            let uri = iuri_ref!("http://example.com/");
             let components = uri.components();
             assert!(!components.uri_type().cannot_be_a_base());
             assert_eq!(Some("http"), components.scheme());

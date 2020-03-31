@@ -606,78 +606,78 @@ mod tests {
 
     #[test]
     fn push_path_segment() {
-        let mut uri = uri_ref!("").to_uri_ref_buf();
+        let mut uri = iuri_ref!("").to_uri_ref_buf();
 
         uri.push_path_segment(".", false);
-        assert_eq!(uri, uri_ref!("."));
+        assert_eq!(uri, iuri_ref!("."));
 
-        let mut uri = uri_ref!("").to_uri_ref_buf();
+        let mut uri = iuri_ref!("").to_uri_ref_buf();
 
         uri.push_path_segment("foobar", false);
-        assert_eq!(uri, uri_ref!("foobar"));
+        assert_eq!(uri, iuri_ref!("foobar"));
 
         uri.push_path_segment("a/b/c", true);
-        assert_eq!(uri, uri_ref!("foobar/a%2Fb%2Fc/"));
+        assert_eq!(uri, iuri_ref!("foobar/a%2Fb%2Fc/"));
 
         uri.push_path_segment(".", true);
-        assert_eq!(uri, uri_ref!("foobar/a%2Fb%2Fc/"));
+        assert_eq!(uri, iuri_ref!("foobar/a%2Fb%2Fc/"));
 
         uri.push_path_segment("..", false);
-        assert_eq!(uri, uri_ref!("foobar/"));
+        assert_eq!(uri, iuri_ref!("foobar/"));
 
         uri.push_path_segment("..", false);
-        assert_eq!(uri, uri_ref!("./"));
+        assert_eq!(uri, iuri_ref!("./"));
     }
 
     #[test]
     fn add_trailing_slash() {
-        let mut uri = uri_ref!("example/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example/").to_uri_ref_buf();
         assert_eq!(false, uri.add_trailing_slash());
 
-        let mut uri = uri_ref!("example").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/"), &uri);
+        assert_eq!(iuri_ref!("example/"), &uri);
 
-        let mut uri = uri_ref!("example?").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/?"), &uri);
+        assert_eq!(iuri_ref!("example/?"), &uri);
 
-        let mut uri = uri_ref!("example#").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example#").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/#"), &uri);
+        assert_eq!(iuri_ref!("example/#"), &uri);
 
-        let mut uri = uri_ref!("example?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/?/#/"), &uri);
+        assert_eq!(iuri_ref!("example/?/#/"), &uri);
 
-        let mut uri = uri_ref!("/e/x/a/m/p/l/e?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("/e/x/a/m/p/l/e?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
+        assert_eq!(iuri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
     }
 
     #[test]
     fn add_leading_slash() {
-        let mut uri = uri_ref!("/example").to_uri_ref_buf();
+        let mut uri = iuri_ref!("/example").to_uri_ref_buf();
         assert_eq!(false, uri.add_leading_slash());
 
-        let mut uri = uri_ref!("example").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example"), &uri);
+        assert_eq!(iuri_ref!("/example"), &uri);
 
-        let mut uri = uri_ref!("example?").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example?"), &uri);
+        assert_eq!(iuri_ref!("/example?"), &uri);
 
-        let mut uri = uri_ref!("example#").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example#").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example#"), &uri);
+        assert_eq!(iuri_ref!("/example#"), &uri);
 
-        let mut uri = uri_ref!("example?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example?/#/"), &uri);
+        assert_eq!(iuri_ref!("/example?/#/"), &uri);
 
-        let mut uri = uri_ref!("e/x/a/m/p/l/e/?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("e/x/a/m/p/l/e/?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
+        assert_eq!(iuri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
     }
 }

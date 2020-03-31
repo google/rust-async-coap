@@ -182,10 +182,13 @@ mod test {
 
     #[test]
     fn uri_type_uri() {
-        assert_eq!(uri_ref!("http://example.com/abcd").uri_type(), UriType::Uri);
+        assert_eq!(
+            iuri_ref!("http://example.com/abcd").uri_type(),
+            UriType::Uri
+        );
         assert_eq!(iuri!("http://example.com/abcd").uri_type(), UriType::Uri);
         assert_eq!(
-            uri_ref!("http://example.com/abcd").components().uri_type(),
+            iuri_ref!("http://example.com/abcd").components().uri_type(),
             UriType::Uri
         );
     }
@@ -193,7 +196,7 @@ mod test {
     #[test]
     fn uri_type_uri_cannot_be_a_base() {
         assert_eq!(
-            uri_ref!("tel:+1-555-867-5309").uri_type(),
+            iuri_ref!("tel:+1-555-867-5309").uri_type(),
             UriType::UriCannotBeABase
         );
         assert_eq!(
@@ -201,7 +204,7 @@ mod test {
             UriType::UriCannotBeABase
         );
         assert_eq!(
-            uri_ref!("tel:+1-555-867-5309").components().uri_type(),
+            iuri_ref!("tel:+1-555-867-5309").components().uri_type(),
             UriType::UriCannotBeABase
         );
     }
@@ -209,7 +212,7 @@ mod test {
     #[test]
     fn uri_type_uri_no_authority() {
         assert_eq!(
-            uri_ref!("unix:/run/foo.socket").uri_type(),
+            iuri_ref!("unix:/run/foo.socket").uri_type(),
             UriType::UriNoAuthority
         );
         assert_eq!(
@@ -217,7 +220,7 @@ mod test {
             UriType::UriNoAuthority
         );
         assert_eq!(
-            uri_ref!("unix:/run/foo.socket").components().uri_type(),
+            iuri_ref!("unix:/run/foo.socket").components().uri_type(),
             UriType::UriNoAuthority
         );
     }
@@ -225,7 +228,7 @@ mod test {
     #[test]
     fn uri_type_network_path() {
         assert_eq!(
-            uri_ref!("//example.com/foo/bar").uri_type(),
+            iuri_ref!("//example.com/foo/bar").uri_type(),
             UriType::NetworkPath
         );
         assert_eq!(
@@ -233,46 +236,46 @@ mod test {
             UriType::NetworkPath
         );
         assert_eq!(
-            uri_ref!("//example.com/foo/bar").components().uri_type(),
+            iuri_ref!("//example.com/foo/bar").components().uri_type(),
             UriType::NetworkPath,
             "{:?}",
-            uri_ref!("//example.com/foo/bar").components()
+            iuri_ref!("//example.com/foo/bar").components()
         );
     }
 
     #[test]
     fn uri_type_absolute_path() {
-        assert_eq!(uri_ref!("/foo/bar?q").uri_type(), UriType::AbsolutePath);
+        assert_eq!(iuri_ref!("/foo/bar?q").uri_type(), UriType::AbsolutePath);
         assert_eq!(irel_ref!("/foo/bar?q").uri_type(), UriType::AbsolutePath);
         assert_eq!(
-            uri_ref!("/foo/bar?q").components().uri_type(),
+            iuri_ref!("/foo/bar?q").components().uri_type(),
             UriType::AbsolutePath
         );
     }
 
     #[test]
     fn uri_type_relative_path() {
-        assert_eq!(uri_ref!("foo/bar?q").uri_type(), UriType::RelativePath);
+        assert_eq!(iuri_ref!("foo/bar?q").uri_type(), UriType::RelativePath);
         assert_eq!(irel_ref!("foo/bar?q").uri_type(), UriType::RelativePath);
         assert_eq!(
-            uri_ref!("foo/bar?q").components().uri_type(),
+            iuri_ref!("foo/bar?q").components().uri_type(),
             UriType::RelativePath
         );
     }
 
     #[test]
     fn uri_type_query() {
-        assert_eq!(uri_ref!("?q#frag").uri_type(), UriType::Query);
+        assert_eq!(iuri_ref!("?q#frag").uri_type(), UriType::Query);
         assert_eq!(irel_ref!("?q#frag").uri_type(), UriType::Query);
-        assert_eq!(uri_ref!("?q#frag").components().uri_type(), UriType::Query);
+        assert_eq!(iuri_ref!("?q#frag").components().uri_type(), UriType::Query);
     }
 
     #[test]
     fn uri_type_fragment() {
-        assert_eq!(uri_ref!("#foo-bar").uri_type(), UriType::Fragment);
+        assert_eq!(iuri_ref!("#foo-bar").uri_type(), UriType::Fragment);
         assert_eq!(irel_ref!("#foo-bar").uri_type(), UriType::Fragment);
         assert_eq!(
-            uri_ref!("#foo-bar").components().uri_type(),
+            iuri_ref!("#foo-bar").components().uri_type(),
             UriType::Fragment
         );
     }
