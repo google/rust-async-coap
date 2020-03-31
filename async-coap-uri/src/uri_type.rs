@@ -183,7 +183,7 @@ mod test {
     #[test]
     fn uri_type_uri() {
         assert_eq!(uri_ref!("http://example.com/abcd").uri_type(), UriType::Uri);
-        assert_eq!(uri!("http://example.com/abcd").uri_type(), UriType::Uri);
+        assert_eq!(iuri!("http://example.com/abcd").uri_type(), UriType::Uri);
         assert_eq!(
             uri_ref!("http://example.com/abcd").components().uri_type(),
             UriType::Uri
@@ -197,7 +197,7 @@ mod test {
             UriType::UriCannotBeABase
         );
         assert_eq!(
-            uri!("tel:+1-555-867-5309").uri_type(),
+            iuri!("tel:+1-555-867-5309").uri_type(),
             UriType::UriCannotBeABase
         );
         assert_eq!(
@@ -213,7 +213,7 @@ mod test {
             UriType::UriNoAuthority
         );
         assert_eq!(
-            uri!("unix:/run/foo.socket").uri_type(),
+            iuri!("unix:/run/foo.socket").uri_type(),
             UriType::UriNoAuthority
         );
         assert_eq!(
@@ -229,7 +229,7 @@ mod test {
             UriType::NetworkPath
         );
         assert_eq!(
-            uri!("//example.com/foo/bar").uri_type(),
+            iuri!("//example.com/foo/bar").uri_type(),
             UriType::NetworkPath
         );
         assert_eq!(

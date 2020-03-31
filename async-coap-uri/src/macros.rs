@@ -202,6 +202,30 @@ macro_rules! uri {
         $crate::_uri_const!($S, $crate::Uri)
     }};
     ( $S:expr ) => {{
+        $crate::assert_uri_literal!($S);
+        $crate::_uri_const!($S, $crate::Uri)
+    }};
+    ( ) => {
+        $crate::uri!("")
+    };
+}
+
+#[doc(hidden)]
+// This macro should be used by `async-coap-uri` and the uri macro is used for downstream crates.
+//
+// This prevents prevents the error:
+// > macro-expanded `macro_export` macros from the current
+// > crate cannot be referred to by absolute paths
+//
+// and allows downstream crates to use the uri macro without having to import
+// the `assert_uri_literal` macro.
+#[macro_export]
+macro_rules! iuri {
+    ( unsafe $S:expr ) => {{
+        // We don't do any correctness checks when $S is preceded by `unsafe`.
+        $crate::_uri_const!($S, $crate::Uri)
+    }};
+    ( $S:expr ) => {{
         assert_uri_literal!($S);
         $crate::_uri_const!($S, $crate::Uri)
     }};

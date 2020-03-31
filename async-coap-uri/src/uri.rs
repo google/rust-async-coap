@@ -279,11 +279,14 @@ mod tests {
 
     #[test]
     fn test_uri_type() {
-        assert_eq!(uri!("scheme://example").uri_type(), UriType::Uri);
-        assert_eq!(uri!("scheme:/example").uri_type(), UriType::UriNoAuthority);
-        assert_eq!(uri!("scheme:example").uri_type(), UriType::UriCannotBeABase);
+        assert_eq!(iuri!("scheme://example").uri_type(), UriType::Uri);
+        assert_eq!(iuri!("scheme:/example").uri_type(), UriType::UriNoAuthority);
         assert_eq!(
-            uri!("scheme:example/://not_a_url").uri_type(),
+            iuri!("scheme:example").uri_type(),
+            UriType::UriCannotBeABase
+        );
+        assert_eq!(
+            iuri!("scheme:example/://not_a_url").uri_type(),
             UriType::UriCannotBeABase
         );
     }
