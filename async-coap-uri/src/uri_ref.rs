@@ -1025,13 +1025,16 @@ mod tests {
 
     #[test]
     fn path_as_rel_ref() {
-        assert_eq!(rel_ref!("example/"), uri_ref!("example/").path_as_rel_ref());
         assert_eq!(
-            rel_ref!("/blah/"),
+            irel_ref!("example/"),
+            uri_ref!("example/").path_as_rel_ref()
+        );
+        assert_eq!(
+            irel_ref!("/blah/"),
             uri_ref!("http://example.com/blah/").path_as_rel_ref()
         );
         assert_eq!(
-            rel_ref!("example.com/blah/"),
+            irel_ref!("example.com/blah/"),
             uri_ref!("http:example.com/blah/?q").path_as_rel_ref()
         );
     }
@@ -1079,11 +1082,11 @@ mod tests {
     #[test]
     fn trim_to_shorten() {
         assert_eq!(
-            Some(rel_ref!("c")),
+            Some(irel_ref!("c")),
             uri_ref!("/a/b/c").trim_to_shorten(uri_ref!("/a/b/"))
         );
         assert_eq!(
-            Some(rel_ref!("c/d/e")),
+            Some(irel_ref!("c/d/e")),
             uri_ref!("/a/b/c/d/e").trim_to_shorten(uri_ref!("/a/b/"))
         );
         assert_eq!(
@@ -1091,11 +1094,11 @@ mod tests {
             uri_ref!("/a/b/c/d/e").trim_to_shorten(uri_ref!("/a/c/"))
         );
         assert_eq!(
-            Some(rel_ref!("c/d/e")),
+            Some(irel_ref!("c/d/e")),
             uri_ref!("/a/b/c/d/e").trim_to_shorten(uri_ref!("coap://blah/a/b/"))
         );
         assert_eq!(
-            Some(rel_ref!("c/d/e")),
+            Some(irel_ref!("c/d/e")),
             uri_ref!("coap://blah/a/b/c/d/e").trim_to_shorten(uri_ref!("coap://blah/a/b/"))
         );
         assert_eq!(
@@ -1103,7 +1106,7 @@ mod tests {
             uri_ref!("coap://blah/a/b/c/d/e").trim_to_shorten(uri_ref!("/a/b/"))
         );
         assert_eq!(
-            Some(rel_ref!("c")),
+            Some(irel_ref!("c")),
             uri_ref!("/a/b/c").trim_to_shorten(uri_ref!("/a/b/d"))
         );
     }

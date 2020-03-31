@@ -82,6 +82,22 @@ macro_rules! uri_ref {
         $crate::_uri_const!($S, $crate::UriRef)
     }};
     ( $S:expr ) => {{
+        $crate::assert_uri_ref_literal!($S);
+        $crate::_uri_const!($S, $crate::UriRef)
+    }};
+    ( ) => {
+        $crate::uri_ref!("")
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! iuri_ref {
+    ( unsafe $S:expr ) => {{
+        // We don't do any correctness checks when $S is preceded by `unsafe`.
+        $crate::_uri_const!($S, $crate::UriRef)
+    }};
+    ( $S:expr ) => {{
         assert_uri_ref_literal!($S);
         $crate::_uri_const!($S, $crate::UriRef)
     }};
@@ -152,6 +168,22 @@ macro_rules! uri_ref {
 /// ```
 #[macro_export]
 macro_rules! rel_ref {
+    ( unsafe $S:expr ) => {{
+        // We don't do any correctness checks when $S is preceded by `unsafe`.
+        $crate::_uri_const!($S, $crate::RelRef)
+    }};
+    ( $S:expr ) => {{
+        $crate::assert_rel_ref_literal!($S);
+        $crate::_uri_const!($S, $crate::RelRef)
+    }};
+    ( ) => {
+        $crate::rel_ref!("")
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! irel_ref {
     ( unsafe $S:expr ) => {{
         // We don't do any correctness checks when $S is preceded by `unsafe`.
         $crate::_uri_const!($S, $crate::RelRef)

@@ -243,7 +243,7 @@ mod test {
     #[test]
     fn uri_type_absolute_path() {
         assert_eq!(uri_ref!("/foo/bar?q").uri_type(), UriType::AbsolutePath);
-        assert_eq!(rel_ref!("/foo/bar?q").uri_type(), UriType::AbsolutePath);
+        assert_eq!(irel_ref!("/foo/bar?q").uri_type(), UriType::AbsolutePath);
         assert_eq!(
             uri_ref!("/foo/bar?q").components().uri_type(),
             UriType::AbsolutePath
@@ -253,7 +253,7 @@ mod test {
     #[test]
     fn uri_type_relative_path() {
         assert_eq!(uri_ref!("foo/bar?q").uri_type(), UriType::RelativePath);
-        assert_eq!(rel_ref!("foo/bar?q").uri_type(), UriType::RelativePath);
+        assert_eq!(irel_ref!("foo/bar?q").uri_type(), UriType::RelativePath);
         assert_eq!(
             uri_ref!("foo/bar?q").components().uri_type(),
             UriType::RelativePath
@@ -263,14 +263,14 @@ mod test {
     #[test]
     fn uri_type_query() {
         assert_eq!(uri_ref!("?q#frag").uri_type(), UriType::Query);
-        assert_eq!(rel_ref!("?q#frag").uri_type(), UriType::Query);
+        assert_eq!(irel_ref!("?q#frag").uri_type(), UriType::Query);
         assert_eq!(uri_ref!("?q#frag").components().uri_type(), UriType::Query);
     }
 
     #[test]
     fn uri_type_fragment() {
         assert_eq!(uri_ref!("#foo-bar").uri_type(), UriType::Fragment);
-        assert_eq!(rel_ref!("#foo-bar").uri_type(), UriType::Fragment);
+        assert_eq!(irel_ref!("#foo-bar").uri_type(), UriType::Fragment);
         assert_eq!(
             uri_ref!("#foo-bar").components().uri_type(),
             UriType::Fragment

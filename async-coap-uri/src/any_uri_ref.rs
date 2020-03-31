@@ -211,9 +211,9 @@ pub trait AnyUriRefExt: AnyUriRef {
 
             if target_type.has_absolute_path() {
                 if base_starts_with_slash {
-                    base_path = rel_ref!("");
+                    base_path = irel_ref!("");
                 } else {
-                    base_path = rel_ref!("/");
+                    base_path = irel_ref!("/");
                 }
             } else if !target_path.is_empty() {
                 base_path = base_path.trim_resource();

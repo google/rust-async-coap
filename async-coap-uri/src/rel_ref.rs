@@ -94,7 +94,7 @@ impl Default for &RelRef {
     /// Empty relative references do nothing but clear the base fragment when resolved
     /// against a base.
     fn default() -> Self {
-        rel_ref!("")
+        irel_ref!("")
     }
 }
 
@@ -688,10 +688,13 @@ mod tests {
 
     #[test]
     fn path() {
-        assert_eq!(rel_ref!("example/"), rel_ref!("example/").path_as_rel_ref());
         assert_eq!(
-            rel_ref!(unsafe "http:example.com/blah/"),
-            rel_ref!(unsafe "http:example.com/blah/?q").path_as_rel_ref()
+            irel_ref!("example/"),
+            irel_ref!("example/").path_as_rel_ref()
+        );
+        assert_eq!(
+            irel_ref!(unsafe "http:example.com/blah/"),
+            irel_ref!(unsafe "http:example.com/blah/?q").path_as_rel_ref()
         );
     }
 
@@ -699,13 +702,13 @@ mod tests {
     fn path_segment_iter() {
         assert_eq!(
             vec!["example", ""],
-            rel_ref!("example/")
+            irel_ref!("example/")
                 .raw_path_segments()
                 .collect::<Vec::<_>>()
         );
         assert_eq!(
             vec!["http:example.com", "blah", ""],
-            rel_ref!(unsafe "http:example.com/blah/?q")
+            irel_ref!(unsafe "http:example.com/blah/?q")
                 .raw_path_segments()
                 .collect::<Vec::<_>>()
         );
@@ -713,98 +716,107 @@ mod tests {
 
     #[test]
     fn avoid_scheme_confusion() {
-        assert_eq!(None, rel_ref!("this/that").colon_in_first_path_segment());
-        assert_eq!(None, rel_ref!("1this:that").colon_in_first_path_segment());
-        assert_eq!(None, rel_ref!("/this:that").colon_in_first_path_segment());
-        assert_eq!(None, rel_ref!("%20this:that").colon_in_first_path_segment());
+        assert_eq!(None, irel_ref!("this/that").colon_in_first_path_segment());
+        assert_eq!(None, irel_ref!("1this:that").colon_in_first_path_segment());
+        assert_eq!(None, irel_ref!("/this:that").colon_in_first_path_segment());
         assert_eq!(
-            Some(4),
-            rel_ref!(unsafe "this:that").colon_in_first_path_segment()
+            None,
+            irel_ref!("%20this:that").colon_in_first_path_segment()
         );
         assert_eq!(
             Some(4),
-            rel_ref!(unsafe "th1s:that").colon_in_first_path_segment()
+            irel_ref!(unsafe "this:that").colon_in_first_path_segment()
         );
-        assert_eq!(None, rel_ref!(unsafe "this:that").to_uri_ref_buf().scheme());
-        assert_eq!(None, rel_ref!(unsafe "this:that").try_as_uri_ref());
         assert_eq!(
-            &rel_ref!(unsafe "this:that").to_uri_ref_buf(),
-            rel_ref!("this%3Athat"),
+            Some(4),
+            irel_ref!(unsafe "th1s:that").colon_in_first_path_segment()
+        );
+        assert_eq!(
+            None,
+            irel_ref!(unsafe "this:that").to_uri_ref_buf().scheme()
+        );
+        assert_eq!(None, irel_ref!(unsafe "this:that").try_as_uri_ref());
+        assert_eq!(
+            &irel_ref!(unsafe "this:that").to_uri_ref_buf(),
+            irel_ref!("this%3Athat"),
         );
     }
 
     #[test]
     fn trim_leading_path_segment() {
         assert_eq!(
-            ("example", rel_ref!("")),
-            rel_ref!("example/").trim_leading_path_segment()
+            ("example", irel_ref!("")),
+            irel_ref!("example/").trim_leading_path_segment()
         );
         assert_eq!(
-            ("example", rel_ref!("")),
-            rel_ref!("/example/").trim_leading_path_segment()
+            ("example", irel_ref!("")),
+            irel_ref!("/example/").trim_leading_path_segment()
         );
         assert_eq!(
-            ("a", rel_ref!("b/c/d/")),
-            rel_ref!("a/b/c/d/").trim_leading_path_segment()
+            ("a", irel_ref!("b/c/d/")),
+            irel_ref!("a/b/c/d/").trim_leading_path_segment()
         );
         assert_eq!(
-            ("a", rel_ref!("?query")),
-            rel_ref!("a?query").trim_leading_path_segment()
+            ("a", irel_ref!("?query")),
+            irel_ref!("a?query").trim_leading_path_segment()
         );
         assert_eq!(
-            ("a", rel_ref!("#frag")),
-            rel_ref!("a#frag").trim_leading_path_segment()
+            ("a", irel_ref!("#frag")),
+            irel_ref!("a#frag").trim_leading_path_segment()
         );
         assert_eq!(
-            ("fool:ish", rel_ref!("/thoughts?")),
-            rel_ref!(unsafe "fool:ish//thoughts?").trim_leading_path_segment()
+            ("fool:ish", irel_ref!("/thoughts?")),
+            irel_ref!(unsafe "fool:ish//thoughts?").trim_leading_path_segment()
         );
-        assert_eq!(("", rel_ref!("")), rel_ref!("").trim_leading_path_segment());
+        assert_eq!(
+            ("", irel_ref!("")),
+            irel_ref!("").trim_leading_path_segment()
+        );
     }
 
     #[test]
     fn trim_leading_n_path_segments() {
         assert_eq!(
-            ("", rel_ref!("a/b/c/d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(0)
+            ("", irel_ref!("a/b/c/d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(0)
         );
         assert_eq!(
-            ("a", rel_ref!("b/c/d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(1)
+            ("a", irel_ref!("b/c/d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(1)
         );
         assert_eq!(
-            ("a/b", rel_ref!("c/d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(2)
+            ("a/b", irel_ref!("c/d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(2)
         );
         assert_eq!(
-            ("a/b/c", rel_ref!("d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(3)
+            ("a/b/c", irel_ref!("d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(3)
         );
         assert_eq!(
-            ("a/b/c/d", rel_ref!("")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(4)
+            ("a/b/c/d", irel_ref!("")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(4)
         );
         assert_eq!(
-            ("a/b/c/d", rel_ref!("")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(5)
-        );
-
-        assert_eq!(
-            ("a/b/c", rel_ref!("d?blah")),
-            rel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(3)
-        );
-        assert_eq!(
-            ("a/b/c/d", rel_ref!("?blah")),
-            rel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(4)
-        );
-        assert_eq!(
-            ("a/b/c/d", rel_ref!("?blah")),
-            rel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(5)
+            ("a/b/c/d", irel_ref!("")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(5)
         );
 
         assert_eq!(
-            ("a/b/c", rel_ref!("d?blah")),
-            rel_ref!("/a/b/c/d?blah").trim_leading_n_path_segments(3)
+            ("a/b/c", irel_ref!("d?blah")),
+            irel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(3)
+        );
+        assert_eq!(
+            ("a/b/c/d", irel_ref!("?blah")),
+            irel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(4)
+        );
+        assert_eq!(
+            ("a/b/c/d", irel_ref!("?blah")),
+            irel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(5)
+        );
+
+        assert_eq!(
+            ("a/b/c", irel_ref!("d?blah")),
+            irel_ref!("/a/b/c/d?blah").trim_leading_n_path_segments(3)
         );
     }
 }
