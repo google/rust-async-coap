@@ -157,7 +157,7 @@ fn try_unescape_uri_cow_3() {
     let s = "bad%10escaping";
     let cow = s.unescape_uri().try_to_cow();
 
-    assert_eq!(cow, Err(6));
+    assert_eq!(cow.unwrap_err().index, 6);
 }
 
 macro_rules! test_escape_unescape {
