@@ -191,7 +191,7 @@ impl StrExt for str {
             iter: self.chars(),
             iter_index: 0,
             next_c: None,
-            had_error: false,
+            had_error: None,
             skip_slashes: false,
         }
     }

@@ -16,6 +16,8 @@
 use core::fmt::Write;
 use std::borrow::Cow;
 use std::char::REPLACEMENT_CHARACTER;
+use std::convert::TryInto;
+use std::fmt;
 use std::fmt::Display;
 use std::iter::FusedIterator;
 use std::str::{from_utf8, from_utf8_unchecked};
@@ -58,7 +60,7 @@ pub struct UnescapeUri<'a> {
     pub(super) iter: std::str::Chars<'a>,
     pub(super) iter_index: usize,
     pub(super) next_c: Option<(char, Option<char>)>,
-    pub(super) had_error: bool,
+    pub(super) had_error: Option<UnescapeError>,
     pub(super) skip_slashes: bool,
 }
 
@@ -77,23 +79,24 @@ impl<'a> From<UnescapeUri<'a>> for Cow<'a, str> {
 impl<'a> FusedIterator for UnescapeUri<'a> {}
 
 impl<'a> UnescapeUri<'a> {
-    /// Returns the location of the first encountered encoding error, if any.
-    pub fn first_error(&self) -> Option<usize> {
+    /// Returns the first encountered encoding error, if any.
+    pub fn first_error(&self) -> Option<DecodingError> {
         let mut iter = self.clone();
         let begin = iter.index();
+
         while let Some(_) = iter.next() {
-            if iter.had_error {
+            if iter.had_error.is_some() {
                 break;
             }
         }
-        if iter.had_error {
+
+        if let Some(err) = iter.had_error {
             let end = iter.index();
-            let mut i = end - begin;
-            if i != 0 {
-                i = i - 1;
-            }
-            return Some(i);
+            let i = (end - begin).saturating_sub(1);
+
+            return Some(DecodingError::new(err, i));
         }
+
         None
     }
 
@@ -131,7 +134,7 @@ impl<'a> UnescapeUri<'a> {
     /// If the string cannot be decoded losslessly, then the location of the encoding
     /// error is returned as an `Err`.
     #[cfg(feature = "std")]
-    pub fn try_to_cow(&self) -> Result<Cow<'a, str>, usize> {
+    pub fn try_to_cow(&self) -> Result<Cow<'a, str>, DecodingError> {
         let as_str = self.iter.as_str();
         if as_str
             .find(|c: char| !c.is_ascii_graphic() || c == '%')
@@ -150,17 +153,8 @@ impl<'a> UnescapeUri<'a> {
     ///
     /// [`String`]: std::string::String
     #[cfg(feature = "std")]
-    pub fn try_to_string(&self) -> Result<String, usize> {
-        let mut iter = self.clone();
-        let mut buffer = String::with_capacity(iter.size_hint().0);
-        while let Some(ch) = iter.next() {
-            if iter.had_error {
-                return Err(iter.index());
-            }
-            buffer.push(ch);
-        }
-        buffer.shrink_to_fit();
-        Ok(buffer)
+    pub fn try_to_string(&self) -> Result<String, DecodingError> {
+        self.clone().try_into()
     }
 
     /// Checks to see if this iterator has the given *unescaped* prefix,
@@ -191,13 +185,98 @@ impl<'a> UnescapeUri<'a> {
 
             let a = iter_self.next();
 
-            if iter_self.had_error {
+            if iter_self.had_error.is_some() {
                 break None;
             }
 
             if a != b {
                 break None;
             }
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'a> TryInto<String> for UnescapeUri<'a> {
+    type Error = DecodingError;
+
+    fn try_into(mut self) -> Result<String, Self::Error> {
+        let mut buffer = String::with_capacity(self.size_hint().0);
+
+        while let Some(ch) = self.next() {
+            if let Some(e) = self.had_error {
+                return Err(DecodingError::new(e, self.index()));
+            }
+
+            buffer.push(ch);
+        }
+
+        buffer.shrink_to_fit();
+        Ok(buffer)
+    }
+}
+
+/// This is returned, when an error occured while decoding.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DecodingError {
+    inner: UnescapeError,
+    /// The index at which the error occured.
+    pub index: usize,
+}
+
+impl fmt::Display for DecodingError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
+impl DecodingError {
+    pub(crate) fn new(inner: UnescapeError, index: usize) -> Self {
+        Self { inner, index }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub(crate) enum UnescapeError {
+    /// found unescaped ascii control char
+    UnescapedAsciiControl(char),
+    /// found an unescaped space (' ')
+    Space,
+    /// there is no char after the `%`
+    MissingChar,
+    /// the char following a `%` must be an ascii character (in the range from 0-9 and a-f or A-F)
+    InvalidEscape(char),
+    /// We don't allow escaped ascii control codes for security reasons.
+    AsciiControl(char),
+    InvalidUtf8 {
+        buf: [u8; 4],
+        len: usize,
+    },
+    InvalidByte(u8),
+    UnexpectedChar(char),
+}
+
+impl fmt::Display for UnescapeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnescapedAsciiControl(c) => {
+                write!(f, "unescaped ascii control character `{:?}`", c)
+            }
+            Self::Space => write!(f, "unescaped space ` `"),
+            Self::MissingChar => write!(f, "missing char after `%`"),
+            Self::InvalidEscape(c) => write!(
+                f,
+                "the char after `%` must be a valid hex character `{:?}`",
+                c
+            ),
+            Self::AsciiControl(c) => write!(
+                f,
+                "ascii control codes are not allowed for security reasons `{:?}`",
+                c
+            ),
+            Self::InvalidUtf8 { buf, len } => write!(f, "invalid utf8 {:?}", &buf[..*len]),
+            Self::InvalidByte(b) => write!(f, "not a valid utf8 character `{}`", b),
+            Self::UnexpectedChar(c) => write!(f, "unexpected char `{:?}`", c),
         }
     }
 }
@@ -214,6 +293,7 @@ impl<'a> Iterator for UnescapeUri<'a> {
             if let Some(x) = next_c {
                 self.next_c = Some((x, None));
             }
+
             return Some(c);
         }
 
@@ -222,13 +302,15 @@ impl<'a> Iterator for UnescapeUri<'a> {
 
             // Immediately drop all unescaped ascii control codes
             if c.is_ascii_control() {
-                self.had_error = true;
+                self.had_error = Some(UnescapeError::UnescapedAsciiControl(c));
                 continue;
             }
+
             match c {
                 ' ' => {
                     // Mark unescaped spaces as an error, but pass them along.
-                    self.had_error = true;
+                    self.had_error = Some(UnescapeError::Space);
+
                     if utf8_len == 0 {
                         return Some(c);
                     } else {
@@ -236,13 +318,14 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         return Some(REPLACEMENT_CHARACTER);
                     }
                 }
-
                 '%' => {
                     self.iter_index += 1;
+
                     let msn = match self.iter.next() {
                         Some(c) if c.is_ascii_hexdigit() => c as u8,
                         Some(c) => {
-                            self.had_error = true;
+                            self.had_error = Some(UnescapeError::InvalidEscape(c));
+
                             if utf8_len == 0 {
                                 self.next_c = Some((c, None));
                                 return Some('%');
@@ -253,17 +336,19 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         }
                         None => {
                             self.iter_index -= 1;
-                            self.had_error = true;
+                            self.had_error = Some(UnescapeError::MissingChar);
                             self.next_c = Some((c, None));
                             return Some(REPLACEMENT_CHARACTER);
                         }
                     };
 
                     self.iter_index += 1;
+
                     let lsn = match self.iter.next() {
                         Some(c) if c.is_ascii_hexdigit() => c as u8,
                         Some(c) => {
-                            self.had_error = true;
+                            self.had_error = Some(UnescapeError::InvalidEscape(c));
+
                             if utf8_len == 0 {
                                 self.next_c = Some((msn as char, Some(c)));
                                 return Some('%');
@@ -274,7 +359,7 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         }
                         None => {
                             self.iter_index -= 1;
-                            self.had_error = true;
+                            self.had_error = Some(UnescapeError::MissingChar);
                             self.next_c = Some((c, None));
                             return Some(REPLACEMENT_CHARACTER);
                         }
@@ -300,7 +385,8 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         // equivalent in the `CONTROL_PICTURES` unicode block at 0x2400.
                         const CONTROL_PICTURES: u32 = 0x2400;
                         let c = core::char::from_u32(decoded as u32 + CONTROL_PICTURES).unwrap();
-                        self.had_error = true;
+                        self.had_error = Some(UnescapeError::AsciiControl(decoded as char));
+
                         if utf8_len == 0 {
                             return Some(c);
                         } else {
@@ -311,16 +397,20 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         // This is a UTF8 byte.
                         utf8_buf[utf8_len] = decoded;
                         utf8_len += 1;
+
                         if utf8_len >= UTF8_CHAR_WIDTH[utf8_buf[0] as usize] as usize {
                             if let Ok(utf8_str) = from_utf8(&utf8_buf[..utf8_len]) {
                                 return Some(utf8_str.chars().next().unwrap());
                             } else {
-                                self.had_error = true;
+                                self.had_error = Some(UnescapeError::InvalidUtf8 {
+                                    buf: utf8_buf,
+                                    len: utf8_len,
+                                });
                                 return Some(REPLACEMENT_CHARACTER);
                             }
                         }
                     } else if utf8_len != 0 {
-                        self.had_error = true;
+                        self.had_error = Some(UnescapeError::InvalidByte(decoded));
                         self.next_c = Some((decoded as char, None));
                         return Some(REPLACEMENT_CHARACTER);
                     } else {
@@ -330,13 +420,15 @@ impl<'a> Iterator for UnescapeUri<'a> {
                 c => {
                     if utf8_len != 0 {
                         self.next_c = Some((c, None));
-                        self.had_error = true;
+                        self.had_error = Some(UnescapeError::UnexpectedChar(c));
                         return Some(REPLACEMENT_CHARACTER);
                     }
+
                     return Some(c);
                 }
             }
         }
+
         None
     }
 
