@@ -14,7 +14,9 @@
 //
 
 use super::*;
+use std::fmt;
 use std::ops::Deref;
+use std::ptr;
 
 /// Unsized string-slice type guaranteed to contain a well-formed [IETF-RFC3986] [relative reference].
 ///
@@ -33,15 +35,14 @@ use std::ops::Deref;
 ///
 /// ```
 /// # use async_coap_uri::*;
-/// # fn main() {
-///     let uri = rel_ref!("/test?query");
-///     let components = uri.components();
-///     assert_eq!(None,          components.scheme());
-///     assert_eq!(None,          components.raw_host());
-///     assert_eq!(None,          components.port());
-///     assert_eq!("/test",       components.raw_path());
-///     assert_eq!(Some("query"), components.raw_query());
-/// # }
+/// let uri = rel_ref!("/test?query");
+/// let components = uri.components();
+///
+/// assert_eq!(None,          components.scheme());
+/// assert_eq!(None,          components.raw_host());
+/// assert_eq!(None,          components.port());
+/// assert_eq!("/test",       components.raw_path());
+/// assert_eq!(Some("query"), components.raw_query());
 /// ```
 ///
 /// ## RelRef and Deref
@@ -94,7 +95,7 @@ impl Default for &RelRef {
     /// Empty relative references do nothing but clear the base fragment when resolved
     /// against a base.
     fn default() -> Self {
-        rel_ref!("")
+        irel_ref!("")
     }
 }
 
@@ -107,7 +108,7 @@ impl Default for &mut RelRef {
         use std::str::from_utf8_unchecked_mut;
         unsafe {
             // SAFETY: An empty slice is pretty harmless, mutable or not.
-            let empty_slice = from_raw_parts_mut(0usize as *mut u8, 0);
+            let empty_slice = from_raw_parts_mut(ptr::null_mut::<u8>(), 0);
             let empty_string = from_utf8_unchecked_mut(empty_slice);
             RelRef::from_str_unchecked_mut(empty_string)
         }
@@ -115,10 +116,7 @@ impl Default for &mut RelRef {
 }
 
 impl AnyUriRef for RelRef {
-    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
-        &self,
-        write: &mut T,
-    ) -> Result<(), core::fmt::Error> {
+    unsafe fn write_to_unsafe<T: fmt::Write + ?Sized>(&self, write: &mut T) -> fmt::Result {
         if let Some(i) = self.colon_in_first_path_segment() {
             write!(write, "{}%3A{}", &self[..i], &self[i + 1..])
         } else {
@@ -143,13 +141,13 @@ impl AnyUriRef for RelRef {
     /// * [`UriType::RelativePath`](enum.UriType.html#variant.RelativePath)
     fn uri_type(&self) -> UriType {
         if self.starts_with('#') {
-            return UriType::Fragment;
+            UriType::Fragment
         } else if self.starts_with('?') {
-            return UriType::Query;
+            UriType::Query
         } else if self.starts_with('/') {
-            return UriType::AbsolutePath;
+            UriType::AbsolutePath
         } else {
-            return UriType::RelativePath;
+            UriType::RelativePath
         }
     }
 
@@ -169,8 +167,8 @@ impl AnyUriRef for RelRef {
 }
 
 /// RelRef will always format the relative reference for display in an unambiguous fashion.
-impl std::fmt::Display for RelRef {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+impl fmt::Display for RelRef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write_to(f)
     }
 }
@@ -180,12 +178,12 @@ impl RelRef {
     /// if the string slice contains data that is not a valid relative-reference.
     pub fn from_str(s: &str) -> Result<&RelRef, ParseError> {
         if let Some(first_error) = s.unescape_uri().first_error() {
-            return Err(ParseError::new(
+            Err(ParseError::new(
                 "Bad percent encoding or illegal characters",
                 Some(first_error..first_error + 1),
-            ));
+            ))
         } else {
-            Ok(unsafe { Self::from_str_unchecked(s.as_ref()) })
+            Ok(unsafe { Self::from_str_unchecked(s) })
         }
     }
 
@@ -274,7 +272,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::raw_path_segments`] for more information.
-    #[must_use]
     pub fn raw_path_segments(&self) -> impl Iterator<Item = &str> {
         let path = self.path_as_rel_ref();
 
@@ -283,7 +280,7 @@ impl RelRef {
         if path.is_empty() {
             // Skip non-existant segments
             let _ = ret.next();
-        } else if path.starts_with("/") {
+        } else if path.starts_with('/') {
             // Skip leading slash.
             let _ = ret.next();
         }
@@ -292,14 +289,12 @@ impl RelRef {
     }
 
     /// See [`UriRef::raw_query_items`] for more information.
-    #[must_use]
     #[inline(always)]
     pub fn raw_query_items(&self) -> impl Iterator<Item = &str> {
         self.0.raw_query_items()
     }
 
     /// See [`UriRef::raw_query_key_values`] for more information.
-    #[must_use]
     #[inline(always)]
     pub fn raw_query_key_values(&self) -> impl Iterator<Item = (&str, &str)> {
         self.0.raw_query_key_values()
@@ -314,7 +309,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::path_segments`] for more information.
-    #[must_use]
     #[cfg(feature = "std")]
     #[inline(always)]
     pub fn path_segments(&self) -> impl Iterator<Item = Cow<'_, str>> {
@@ -322,7 +316,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::query_items`] for more information.
-    #[must_use]
     #[cfg(feature = "std")]
     #[inline(always)]
     pub fn query_items(&self) -> impl Iterator<Item = Cow<'_, str>> {
@@ -330,7 +323,6 @@ impl RelRef {
     }
 
     /// See [`UriRef::query_key_values`] for more information.
-    #[must_use]
     #[cfg(feature = "std")]
     #[inline(always)]
     pub fn query_key_values(&self) -> impl Iterator<Item = (Cow<'_, str>, Cow<'_, str>)> {
@@ -390,7 +382,7 @@ impl RelRef {
 
         ret.disambiguate();
 
-        return ret;
+        ret
     }
 }
 
@@ -619,11 +611,10 @@ impl RelRef {
     /// held `self` is no longer accessed directly. See [`UriUnescapeBuf`] for an example.
     ///
     /// [`raw_path_segment_iter()`]: #method.raw_path_segment_iter
-    #[must_use]
     pub unsafe fn unsafe_path_segment_iter(&mut self) -> impl Iterator<Item = &str> {
         let path = self.path_as_rel_ref_mut();
         let is_empty = path.is_empty();
-        let starts_with_slash = path.starts_with("/");
+        let starts_with_slash = path.starts_with('/');
 
         let mut_bytes = path.as_mut_str().as_bytes_mut();
 
@@ -654,15 +645,14 @@ impl RelRef {
     /// owner) is never directly used again. See [`UriUnescapeBuf`] for an example.
     ///
     /// [`raw_query_item_iter()`]: #method.raw_query_item_iter
-    #[must_use]
     pub unsafe fn unsafe_query_item_iter(&mut self) -> impl Iterator<Item = &str> {
-        let query = self.query_as_rel_ref_mut().unwrap_or(Default::default());
+        let query = self.query_as_rel_ref_mut().unwrap_or_default();
         let is_empty = query.is_empty();
         let starts_with_delim = query.starts_with(|c| c == '&' || c == ';');
 
         let mut mut_bytes = query.as_mut_str().as_bytes_mut();
 
-        if is_empty == false && mut_bytes[0] == b'?' {
+        if !is_empty && mut_bytes[0] == b'?' {
             mut_bytes = &mut mut_bytes[1..];
         }
 
@@ -688,10 +678,13 @@ mod tests {
 
     #[test]
     fn path() {
-        assert_eq!(rel_ref!("example/"), rel_ref!("example/").path_as_rel_ref());
         assert_eq!(
-            rel_ref!(unsafe "http:example.com/blah/"),
-            rel_ref!(unsafe "http:example.com/blah/?q").path_as_rel_ref()
+            irel_ref!("example/"),
+            irel_ref!("example/").path_as_rel_ref()
+        );
+        assert_eq!(
+            irel_ref!(unsafe "http:example.com/blah/"),
+            irel_ref!(unsafe "http:example.com/blah/?q").path_as_rel_ref()
         );
     }
 
@@ -699,13 +692,13 @@ mod tests {
     fn path_segment_iter() {
         assert_eq!(
             vec!["example", ""],
-            rel_ref!("example/")
+            irel_ref!("example/")
                 .raw_path_segments()
                 .collect::<Vec::<_>>()
         );
         assert_eq!(
             vec!["http:example.com", "blah", ""],
-            rel_ref!(unsafe "http:example.com/blah/?q")
+            irel_ref!(unsafe "http:example.com/blah/?q")
                 .raw_path_segments()
                 .collect::<Vec::<_>>()
         );
@@ -713,98 +706,107 @@ mod tests {
 
     #[test]
     fn avoid_scheme_confusion() {
-        assert_eq!(None, rel_ref!("this/that").colon_in_first_path_segment());
-        assert_eq!(None, rel_ref!("1this:that").colon_in_first_path_segment());
-        assert_eq!(None, rel_ref!("/this:that").colon_in_first_path_segment());
-        assert_eq!(None, rel_ref!("%20this:that").colon_in_first_path_segment());
+        assert_eq!(None, irel_ref!("this/that").colon_in_first_path_segment());
+        assert_eq!(None, irel_ref!("1this:that").colon_in_first_path_segment());
+        assert_eq!(None, irel_ref!("/this:that").colon_in_first_path_segment());
         assert_eq!(
-            Some(4),
-            rel_ref!(unsafe "this:that").colon_in_first_path_segment()
+            None,
+            irel_ref!("%20this:that").colon_in_first_path_segment()
         );
         assert_eq!(
             Some(4),
-            rel_ref!(unsafe "th1s:that").colon_in_first_path_segment()
+            irel_ref!(unsafe "this:that").colon_in_first_path_segment()
         );
-        assert_eq!(None, rel_ref!(unsafe "this:that").to_uri_ref_buf().scheme());
-        assert_eq!(None, rel_ref!(unsafe "this:that").try_as_uri_ref());
         assert_eq!(
-            &rel_ref!(unsafe "this:that").to_uri_ref_buf(),
-            rel_ref!("this%3Athat"),
+            Some(4),
+            irel_ref!(unsafe "th1s:that").colon_in_first_path_segment()
+        );
+        assert_eq!(
+            None,
+            irel_ref!(unsafe "this:that").to_uri_ref_buf().scheme()
+        );
+        assert_eq!(None, irel_ref!(unsafe "this:that").try_as_uri_ref());
+        assert_eq!(
+            &irel_ref!(unsafe "this:that").to_uri_ref_buf(),
+            irel_ref!("this%3Athat"),
         );
     }
 
     #[test]
     fn trim_leading_path_segment() {
         assert_eq!(
-            ("example", rel_ref!("")),
-            rel_ref!("example/").trim_leading_path_segment()
+            ("example", irel_ref!("")),
+            irel_ref!("example/").trim_leading_path_segment()
         );
         assert_eq!(
-            ("example", rel_ref!("")),
-            rel_ref!("/example/").trim_leading_path_segment()
+            ("example", irel_ref!("")),
+            irel_ref!("/example/").trim_leading_path_segment()
         );
         assert_eq!(
-            ("a", rel_ref!("b/c/d/")),
-            rel_ref!("a/b/c/d/").trim_leading_path_segment()
+            ("a", irel_ref!("b/c/d/")),
+            irel_ref!("a/b/c/d/").trim_leading_path_segment()
         );
         assert_eq!(
-            ("a", rel_ref!("?query")),
-            rel_ref!("a?query").trim_leading_path_segment()
+            ("a", irel_ref!("?query")),
+            irel_ref!("a?query").trim_leading_path_segment()
         );
         assert_eq!(
-            ("a", rel_ref!("#frag")),
-            rel_ref!("a#frag").trim_leading_path_segment()
+            ("a", irel_ref!("#frag")),
+            irel_ref!("a#frag").trim_leading_path_segment()
         );
         assert_eq!(
-            ("fool:ish", rel_ref!("/thoughts?")),
-            rel_ref!(unsafe "fool:ish//thoughts?").trim_leading_path_segment()
+            ("fool:ish", irel_ref!("/thoughts?")),
+            irel_ref!(unsafe "fool:ish//thoughts?").trim_leading_path_segment()
         );
-        assert_eq!(("", rel_ref!("")), rel_ref!("").trim_leading_path_segment());
+        assert_eq!(
+            ("", irel_ref!("")),
+            irel_ref!("").trim_leading_path_segment()
+        );
     }
 
     #[test]
     fn trim_leading_n_path_segments() {
         assert_eq!(
-            ("", rel_ref!("a/b/c/d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(0)
+            ("", irel_ref!("a/b/c/d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(0)
         );
         assert_eq!(
-            ("a", rel_ref!("b/c/d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(1)
+            ("a", irel_ref!("b/c/d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(1)
         );
         assert_eq!(
-            ("a/b", rel_ref!("c/d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(2)
+            ("a/b", irel_ref!("c/d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(2)
         );
         assert_eq!(
-            ("a/b/c", rel_ref!("d")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(3)
+            ("a/b/c", irel_ref!("d")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(3)
         );
         assert_eq!(
-            ("a/b/c/d", rel_ref!("")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(4)
+            ("a/b/c/d", irel_ref!("")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(4)
         );
         assert_eq!(
-            ("a/b/c/d", rel_ref!("")),
-            rel_ref!("a/b/c/d").trim_leading_n_path_segments(5)
-        );
-
-        assert_eq!(
-            ("a/b/c", rel_ref!("d?blah")),
-            rel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(3)
-        );
-        assert_eq!(
-            ("a/b/c/d", rel_ref!("?blah")),
-            rel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(4)
-        );
-        assert_eq!(
-            ("a/b/c/d", rel_ref!("?blah")),
-            rel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(5)
+            ("a/b/c/d", irel_ref!("")),
+            irel_ref!("a/b/c/d").trim_leading_n_path_segments(5)
         );
 
         assert_eq!(
-            ("a/b/c", rel_ref!("d?blah")),
-            rel_ref!("/a/b/c/d?blah").trim_leading_n_path_segments(3)
+            ("a/b/c", irel_ref!("d?blah")),
+            irel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(3)
+        );
+        assert_eq!(
+            ("a/b/c/d", irel_ref!("?blah")),
+            irel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(4)
+        );
+        assert_eq!(
+            ("a/b/c/d", irel_ref!("?blah")),
+            irel_ref!("a/b/c/d?blah").trim_leading_n_path_segments(5)
+        );
+
+        assert_eq!(
+            ("a/b/c", irel_ref!("d?blah")),
+            irel_ref!("/a/b/c/d?blah").trim_leading_n_path_segments(3)
         );
     }
 }

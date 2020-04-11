@@ -169,7 +169,8 @@ impl<'a, X: NeedsEscape> EscapeUri<'a, X> {
                 return true;
             }
         }
-        return false;
+
+        false
     }
 
     /// Converts this iterator into a [`std::borrow::Cow<str>`].

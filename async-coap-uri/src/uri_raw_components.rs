@@ -15,7 +15,7 @@
 
 use super::*;
 
-use std::fmt::{Display, Formatter};
+use std::fmt;
 use std::str::FromStr;
 
 /// Struct that holds parsed URI components.
@@ -44,10 +44,7 @@ impl AnyUriRef for UriRawComponents<'_> {
     /// Note that the implementation of this method for [`UriRawComponents`] ignores
     /// the value of `self.userinfo`, `self.host`, and `self.port`; instead relying entirely
     /// on `self.authority`.
-    unsafe fn write_to_unsafe<T: core::fmt::Write + ?Sized>(
-        &self,
-        f: &mut T,
-    ) -> Result<(), core::fmt::Error> {
+    unsafe fn write_to_unsafe<T: fmt::Write + ?Sized>(&self, f: &mut T) -> fmt::Result {
         // Note that everything in `self` is already escaped, so we
         // don't need to do that here.
         if let Some(scheme) = self.scheme {
@@ -84,7 +81,7 @@ impl AnyUriRef for UriRawComponents<'_> {
     }
 
     fn components(&self) -> UriRawComponents<'_> {
-        self.clone()
+        *self
     }
 
     fn uri_type(&self) -> UriType {
@@ -110,12 +107,12 @@ impl AnyUriRef for UriRawComponents<'_> {
             }
         }
 
-        return UriType::RelativePath;
+        UriType::RelativePath
     }
 }
 
-impl Display for UriRawComponents<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for UriRawComponents<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write_to(f)
     }
 }
@@ -257,7 +254,7 @@ impl<'a> UriRawComponents<'a> {
         if self.path.is_empty() {
             let mut ret = "".split('/');
             let _ = ret.next();
-            return ret;
+            ret
         } else {
             self.path.split('/')
         }
@@ -349,7 +346,7 @@ impl<'a> UriRawComponents<'a> {
     pub fn trim_leading_dot_slashes(&self) -> Self {
         UriRawComponents {
             path: self.path_as_rel_ref().trim_leading_dot_slashes(),
-            ..self.clone()
+            ..*self
         }
     }
 
@@ -359,7 +356,7 @@ impl<'a> UriRawComponents<'a> {
         UriRawComponents {
             query: None,
             fragment: None,
-            ..self.clone()
+            ..*self
         }
     }
 
@@ -368,7 +365,7 @@ impl<'a> UriRawComponents<'a> {
     pub fn trim_fragment(&self) -> Self {
         UriRawComponents {
             fragment: None,
-            ..self.clone()
+            ..*self
         }
     }
 }
@@ -440,7 +437,7 @@ mod tests {
     #[test]
     fn components() {
         {
-            let uri = uri_ref!("http://example.com/");
+            let uri = iuri_ref!("http://example.com/");
             let components = uri.components();
             assert!(!components.uri_type().cannot_be_a_base());
             assert_eq!(Some("http"), components.scheme());
@@ -485,61 +482,61 @@ mod tests {
                 "http://goo.gl/a/b/c/d?query",
                 vec!["", "a", "b", "c", "d"],
                 vec!["query"],
-                rel_ref!("/a/b/c/d?query"),
+                irel_ref!("/a/b/c/d?query"),
             ),
             (
                 "http://goo.gl/a/b/c/d",
                 vec!["", "a", "b", "c", "d"],
                 vec![],
-                rel_ref!("/a/b/c/d"),
+                irel_ref!("/a/b/c/d"),
             ),
             (
                 "http://goo.gl/a/b/c/d/",
                 vec!["", "a", "b", "c", "d", ""],
                 vec![],
-                rel_ref!("/a/b/c/d/"),
+                irel_ref!("/a/b/c/d/"),
             ),
             (
                 "/a/b/c/d/",
                 vec!["", "a", "b", "c", "d", ""],
                 vec![],
-                rel_ref!("/a/b/c/d/"),
+                irel_ref!("/a/b/c/d/"),
             ),
             (
                 "a/b/c/d/",
                 vec!["a", "b", "c", "d", ""],
                 vec![],
-                rel_ref!("a/b/c/d/"),
+                irel_ref!("a/b/c/d/"),
             ),
             (
                 "a/b//c/d/",
                 vec!["a", "b", "", "c", "d", ""],
                 vec![],
-                rel_ref!("a/b//c/d/"),
+                irel_ref!("a/b//c/d/"),
             ),
             (
                 "a/b/c/d/?",
                 vec!["a", "b", "c", "d", ""],
                 vec![""],
-                rel_ref!("a/b/c/d/?"),
+                irel_ref!("a/b/c/d/?"),
             ),
             (
                 "a?b=1;c=2;d=3",
                 vec!["a"],
                 vec!["b=1", "c=2", "d=3"],
-                rel_ref!("a?b=1;c=2;d=3"),
+                irel_ref!("a?b=1;c=2;d=3"),
             ),
             (
                 "a?b=1&c=2&d=3",
                 vec!["a"],
                 vec!["b=1", "c=2", "d=3"],
-                rel_ref!("a?b=1&c=2&d=3"),
+                irel_ref!("a?b=1&c=2&d=3"),
             ),
             (
                 "a/b/%47/d/",
                 vec!["a", "b", "%47", "d", ""],
                 vec![],
-                rel_ref!("a/b/%47/d/"),
+                irel_ref!("a/b/%47/d/"),
             ),
         ];
 

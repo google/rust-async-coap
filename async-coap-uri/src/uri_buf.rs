@@ -14,18 +14,21 @@
 //
 
 use super::*;
+use std::convert::TryFrom;
 use std::fmt::Write;
 use std::ops::Deref;
+use std::str::FromStr;
 
 /// Sized, heap-allocated string type guaranteed to contain a well-formed [IETF-RFC3986] URI
 /// or [network path](enum.UriType.html#variant.NetworkPath).
 ///
-/// The unsized counterpart is [`Uri`](crate::Uri).
+/// The unsized counterpart is [`Uri`].
 ///
-/// This type implements [`std::ops::Deref<Uri>`], so you can also use all of the
+/// This type implements [`Deref<Target = Uri>`], so you can also use all of the
 /// methods from [`Uri`] on this type.
 ///
 /// [IETF-RFC3986]: https://tools.ietf.org/html/rfc3986
+/// [`Deref<Target = Uri>`]: std::ops::Deref
 #[derive(Clone, Eq, Hash)]
 pub struct UriBuf(pub(super) UriRefBuf);
 
@@ -48,6 +51,38 @@ impl AsRef<Uri> for UriBuf {
 impl From<&Uri> for UriBuf {
     fn from(x: &Uri) -> Self {
         x.to_uri_buf()
+    }
+}
+
+impl FromStr for UriBuf {
+    type Err = ParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Self::from_str(input)
+    }
+}
+
+impl TryFrom<&str> for UriBuf {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
+impl TryFrom<String> for UriBuf {
+    type Error = ParseError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_string(value)
+    }
+}
+
+impl<'a> TryFrom<&'a String> for UriBuf {
+    type Error = <Self as TryFrom<&'a str>>::Error;
+
+    fn try_from(value: &'a String) -> Result<Self, Self::Error> {
+        <Self as TryFrom<&'a str>>::try_from(value.as_str())
     }
 }
 
@@ -99,9 +134,7 @@ impl UriBuf {
             path = &path[1..];
         }
 
-        let path_segment_iter =
-            path.split('/')
-                .filter_map(|seg| if seg == "." { None } else { Some(seg) });
+        let path_segment_iter = path.split('/').filter(|seg| *seg != ".");
 
         for seg in path_segment_iter {
             ret.push('/');
@@ -297,3 +330,34 @@ impl UriBuf {
 }
 
 inherits_uri_ref_buf!(UriBuf);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_str() {
+        assert_eq!(
+            <UriBuf as FromStr>::from_str("https://www.google.com/"),
+            UriBuf::from_str("https://www.google.com/")
+        );
+    }
+
+    #[test]
+    fn test_try_from() {
+        assert_eq!(
+            UriBuf::try_from("https://www.google.com/"),
+            UriBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriBuf::try_from("https://www.google.com/".to_string()),
+            UriBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriBuf::try_from(&"https://www.google.com/".to_string()),
+            UriBuf::try_from("https://www.google.com/"),
+        );
+    }
+}

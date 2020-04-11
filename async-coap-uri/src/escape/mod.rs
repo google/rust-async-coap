@@ -202,6 +202,7 @@ impl StrExt for str {
 
         for c in iter {
             let mut buf = [0u8; 4];
+
             for i in 0..c.encode_utf8(&mut buf).len() {
                 unsafe {
                     // SAFETY: The correctness of this code depends on the unescape

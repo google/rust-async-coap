@@ -14,7 +14,9 @@
 //
 
 use super::*;
+use std::convert::TryFrom;
 use std::ops::Deref;
+use std::str::FromStr;
 
 /// Sized, heap-allocated string type containing either a URI or a relative-reference.
 ///
@@ -27,6 +29,38 @@ use std::ops::Deref;
 pub struct UriRefBuf(pub(super) String);
 
 _impl_uri_buf_traits_base!(UriRefBuf, UriRef);
+
+impl FromStr for UriRefBuf {
+    type Err = ParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        Self::from_str(input)
+    }
+}
+
+impl TryFrom<&str> for UriRefBuf {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
+impl TryFrom<String> for UriRefBuf {
+    type Error = ParseError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_string(value)
+    }
+}
+
+impl<'a> TryFrom<&'a String> for UriRefBuf {
+    type Error = <Self as TryFrom<&'a str>>::Error;
+
+    fn try_from(value: &'a String) -> Result<Self, Self::Error> {
+        <Self as TryFrom<&'a str>>::try_from(value.as_str())
+    }
+}
 
 impl Default for UriRefBuf {
     fn default() -> Self {
@@ -120,30 +154,24 @@ impl UriRefBuf {
     ///
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh?query").to_uri_ref_buf();
-    ///     uri.truncate_query();
-    ///     assert_eq!("http://example.com/blah/bleh", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh?query").to_uri_ref_buf();
+    /// uri.truncate_query();
+    /// assert_eq!("http://example.com/blah/bleh", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh#foobar").to_uri_ref_buf();
-    ///     uri.truncate_query();
-    ///     assert_eq!("http://example.com/blah/bleh", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh#foobar").to_uri_ref_buf();
+    /// uri.truncate_query();
+    /// assert_eq!("http://example.com/blah/bleh", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("another?foo#bar").to_uri_ref_buf();
-    ///     uri.truncate_query();
-    ///     assert_eq!("another", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("another?foo#bar").to_uri_ref_buf();
+    /// uri.truncate_query();
+    /// assert_eq!("another", uri.as_str());
     /// ```
     pub fn truncate_query(&mut self) {
-        if let Some(i) = self.query_start().or(self.fragment_start()) {
+        if let Some(i) = self.query_start().or_else(|| self.fragment_start()) {
             self.0.truncate(i)
         }
     }
@@ -159,27 +187,21 @@ impl UriRefBuf {
     ///
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
-    ///     uri.truncate_resource();
-    ///     assert_eq!("http://example.com/blah/", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
+    /// uri.truncate_resource();
+    /// assert_eq!("http://example.com/blah/", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/").to_uri_ref_buf();
-    ///     uri.truncate_resource();
-    ///     assert_eq!("http://example.com/blah/", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/").to_uri_ref_buf();
+    /// uri.truncate_resource();
+    /// assert_eq!("http://example.com/blah/", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
-    ///     uri.truncate_resource();
-    ///     assert_eq!("", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
+    /// uri.truncate_resource();
+    /// assert_eq!("", uri.as_str());
     /// ```
     /// * `http://example.com/blah/bleh` becomes `http://example.com/blah/`
     /// * `http://example.com/blah/` becomes `http://example.com/blah/`
@@ -206,23 +228,19 @@ impl UriRefBuf {
     ///
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("http://example.com/blah/", uri.as_str());
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("http://example.com/", uri.as_str());
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("http://example.com/", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("http://example.com/blah/bleh").to_uri_ref_buf();
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("http://example.com/blah/", uri.as_str());
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("http://example.com/", uri.as_str());
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("http://example.com/", uri.as_str());
     /// ```
     /// ```
     /// # use async_coap_uri::*;
-    /// # fn main() {
-    ///     let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
-    ///     uri.truncate_last_path_segment();
-    ///     assert_eq!("./", uri.as_str());
-    /// # }
+    /// let mut uri = uri_ref!("foo#bar").to_uri_ref_buf();
+    /// uri.truncate_last_path_segment();
+    /// assert_eq!("./", uri.as_str());
     /// ```
     /// * `http://example.com/blah/bleh` becomes `http://example.com/blah/`
     /// * `http://example.com/blah/` becomes `http://example.com/`
@@ -381,11 +399,13 @@ impl UriRefBuf {
     /// ```
     pub fn push_query_item(&mut self, item: &str) {
         self.truncate_fragment();
-        if let Some(_) = self.query_start() {
+
+        if self.query_start().is_some() {
             self.0.push('&');
         } else {
             self.0.push('?');
         }
+
         self.0.extend(item.escape_uri().for_query());
     }
 
@@ -413,11 +433,13 @@ impl UriRefBuf {
     /// ```
     pub fn push_query_key_value(&mut self, key: &str, value: &str) {
         self.truncate_fragment();
-        if let Some(_) = self.query_start() {
+
+        if self.query_start().is_some() {
             self.0.push('&');
         } else {
             self.0.push('?');
         }
+
         self.0.extend(key.escape_uri().for_query());
         self.0.push('=');
         self.0.extend(value.escape_uri().for_query());
@@ -426,6 +448,7 @@ impl UriRefBuf {
     /// Replaces the path, query, and fragment with that from `rel`.
     pub fn replace_path(&mut self, rel: &RelRef) {
         self.truncate_path();
+
         if !rel.starts_with(|c| c == '/' || c == '?' || c == '#') {
             self.add_trailing_slash();
         }
@@ -600,84 +623,107 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_try_from() {
+        assert_eq!(
+            UriRefBuf::try_from("https://www.google.com/"),
+            UriRefBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriRefBuf::try_from("https://www.google.com/".to_string()),
+            UriRefBuf::from_str("https://www.google.com/")
+        );
+
+        assert_eq!(
+            UriRefBuf::try_from(&"https://www.google.com/".to_string()),
+            UriRefBuf::try_from("https://www.google.com/"),
+        );
+    }
+
+    #[test]
     fn test_from_str() {
+        assert_eq!(
+            <UriRefBuf as FromStr>::from_str("https://www.google.com/"),
+            UriRefBuf::from_str("https://www.google.com/")
+        );
+
         assert!(UriRefBuf::from_str("http://example.com/").is_ok());
     }
 
     #[test]
     fn push_path_segment() {
-        let mut uri = uri_ref!("").to_uri_ref_buf();
+        let mut uri = iuri_ref!("").to_uri_ref_buf();
 
         uri.push_path_segment(".", false);
-        assert_eq!(uri, uri_ref!("."));
+        assert_eq!(uri, iuri_ref!("."));
 
-        let mut uri = uri_ref!("").to_uri_ref_buf();
+        let mut uri = iuri_ref!("").to_uri_ref_buf();
 
         uri.push_path_segment("foobar", false);
-        assert_eq!(uri, uri_ref!("foobar"));
+        assert_eq!(uri, iuri_ref!("foobar"));
 
         uri.push_path_segment("a/b/c", true);
-        assert_eq!(uri, uri_ref!("foobar/a%2Fb%2Fc/"));
+        assert_eq!(uri, iuri_ref!("foobar/a%2Fb%2Fc/"));
 
         uri.push_path_segment(".", true);
-        assert_eq!(uri, uri_ref!("foobar/a%2Fb%2Fc/"));
+        assert_eq!(uri, iuri_ref!("foobar/a%2Fb%2Fc/"));
 
         uri.push_path_segment("..", false);
-        assert_eq!(uri, uri_ref!("foobar/"));
+        assert_eq!(uri, iuri_ref!("foobar/"));
 
         uri.push_path_segment("..", false);
-        assert_eq!(uri, uri_ref!("./"));
+        assert_eq!(uri, iuri_ref!("./"));
     }
 
     #[test]
     fn add_trailing_slash() {
-        let mut uri = uri_ref!("example/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example/").to_uri_ref_buf();
         assert_eq!(false, uri.add_trailing_slash());
 
-        let mut uri = uri_ref!("example").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/"), &uri);
+        assert_eq!(iuri_ref!("example/"), &uri);
 
-        let mut uri = uri_ref!("example?").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/?"), &uri);
+        assert_eq!(iuri_ref!("example/?"), &uri);
 
-        let mut uri = uri_ref!("example#").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example#").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/#"), &uri);
+        assert_eq!(iuri_ref!("example/#"), &uri);
 
-        let mut uri = uri_ref!("example?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("example/?/#/"), &uri);
+        assert_eq!(iuri_ref!("example/?/#/"), &uri);
 
-        let mut uri = uri_ref!("/e/x/a/m/p/l/e?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("/e/x/a/m/p/l/e?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_trailing_slash());
-        assert_eq!(uri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
+        assert_eq!(iuri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
     }
 
     #[test]
     fn add_leading_slash() {
-        let mut uri = uri_ref!("/example").to_uri_ref_buf();
+        let mut uri = iuri_ref!("/example").to_uri_ref_buf();
         assert_eq!(false, uri.add_leading_slash());
 
-        let mut uri = uri_ref!("example").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example"), &uri);
+        assert_eq!(iuri_ref!("/example"), &uri);
 
-        let mut uri = uri_ref!("example?").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example?"), &uri);
+        assert_eq!(iuri_ref!("/example?"), &uri);
 
-        let mut uri = uri_ref!("example#").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example#").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example#"), &uri);
+        assert_eq!(iuri_ref!("/example#"), &uri);
 
-        let mut uri = uri_ref!("example?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("example?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/example?/#/"), &uri);
+        assert_eq!(iuri_ref!("/example?/#/"), &uri);
 
-        let mut uri = uri_ref!("e/x/a/m/p/l/e/?/#/").to_uri_ref_buf();
+        let mut uri = iuri_ref!("e/x/a/m/p/l/e/?/#/").to_uri_ref_buf();
         assert_eq!(true, uri.add_leading_slash());
-        assert_eq!(uri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
+        assert_eq!(iuri_ref!("/e/x/a/m/p/l/e/?/#/"), &uri);
     }
 }

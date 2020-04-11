@@ -90,7 +90,7 @@ impl<'a> UnescapeUri<'a> {
             let end = iter.index();
             let mut i = end - begin;
             if i != 0 {
-                i = i - 1;
+                i -= 1;
             }
             return Some(i);
         }
@@ -137,7 +137,7 @@ impl<'a> UnescapeUri<'a> {
             .find(|c: char| !c.is_ascii_graphic() || c == '%')
             .is_some()
         {
-            self.try_to_string().map(|v| Cow::from(v))
+            self.try_to_string().map(Cow::from)
         } else {
             Ok(Cow::from(as_str))
         }
