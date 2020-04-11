@@ -437,7 +437,7 @@ mod tests {
     #[test]
     fn components() {
         {
-            let uri = uri_ref!("http://example.com/");
+            let uri = iuri_ref!("http://example.com/");
             let components = uri.components();
             assert!(!components.uri_type().cannot_be_a_base());
             assert_eq!(Some("http"), components.scheme());
@@ -482,61 +482,61 @@ mod tests {
                 "http://goo.gl/a/b/c/d?query",
                 vec!["", "a", "b", "c", "d"],
                 vec!["query"],
-                rel_ref!("/a/b/c/d?query"),
+                irel_ref!("/a/b/c/d?query"),
             ),
             (
                 "http://goo.gl/a/b/c/d",
                 vec!["", "a", "b", "c", "d"],
                 vec![],
-                rel_ref!("/a/b/c/d"),
+                irel_ref!("/a/b/c/d"),
             ),
             (
                 "http://goo.gl/a/b/c/d/",
                 vec!["", "a", "b", "c", "d", ""],
                 vec![],
-                rel_ref!("/a/b/c/d/"),
+                irel_ref!("/a/b/c/d/"),
             ),
             (
                 "/a/b/c/d/",
                 vec!["", "a", "b", "c", "d", ""],
                 vec![],
-                rel_ref!("/a/b/c/d/"),
+                irel_ref!("/a/b/c/d/"),
             ),
             (
                 "a/b/c/d/",
                 vec!["a", "b", "c", "d", ""],
                 vec![],
-                rel_ref!("a/b/c/d/"),
+                irel_ref!("a/b/c/d/"),
             ),
             (
                 "a/b//c/d/",
                 vec!["a", "b", "", "c", "d", ""],
                 vec![],
-                rel_ref!("a/b//c/d/"),
+                irel_ref!("a/b//c/d/"),
             ),
             (
                 "a/b/c/d/?",
                 vec!["a", "b", "c", "d", ""],
                 vec![""],
-                rel_ref!("a/b/c/d/?"),
+                irel_ref!("a/b/c/d/?"),
             ),
             (
                 "a?b=1;c=2;d=3",
                 vec!["a"],
                 vec!["b=1", "c=2", "d=3"],
-                rel_ref!("a?b=1;c=2;d=3"),
+                irel_ref!("a?b=1;c=2;d=3"),
             ),
             (
                 "a?b=1&c=2&d=3",
                 vec!["a"],
                 vec!["b=1", "c=2", "d=3"],
-                rel_ref!("a?b=1&c=2&d=3"),
+                irel_ref!("a?b=1&c=2&d=3"),
             ),
             (
                 "a/b/%47/d/",
                 vec!["a", "b", "%47", "d", ""],
                 vec![],
-                rel_ref!("a/b/%47/d/"),
+                irel_ref!("a/b/%47/d/"),
             ),
         ];
 

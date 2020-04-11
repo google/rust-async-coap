@@ -91,7 +91,7 @@ impl Deref for UriRef {
 /// The default `&UriRef` is an empty URI-reference.
 impl Default for &UriRef {
     fn default() -> Self {
-        uri_ref!("")
+        iuri_ref!("")
     }
 }
 
@@ -862,7 +862,7 @@ impl UriRef {
                 ret = unsafe { Self::from_str_unchecked(&self[..i + 1]) };
             }
         } else if path_start == 0 {
-            ret = uri_ref!("");
+            ret = iuri_ref!("");
         }
 
         ret
@@ -1023,86 +1023,95 @@ mod tests {
 
     #[test]
     fn path_as_rel_ref() {
-        assert_eq!(rel_ref!("example/"), uri_ref!("example/").path_as_rel_ref());
         assert_eq!(
-            rel_ref!("/blah/"),
-            uri_ref!("http://example.com/blah/").path_as_rel_ref()
+            irel_ref!("example/"),
+            iuri_ref!("example/").path_as_rel_ref()
         );
         assert_eq!(
-            rel_ref!("example.com/blah/"),
-            uri_ref!("http:example.com/blah/?q").path_as_rel_ref()
+            irel_ref!("/blah/"),
+            iuri_ref!("http://example.com/blah/").path_as_rel_ref()
+        );
+        assert_eq!(
+            irel_ref!("example.com/blah/"),
+            iuri_ref!("http:example.com/blah/?q").path_as_rel_ref()
         );
     }
 
     #[test]
     fn has_trailing_slash() {
-        assert_eq!(true, uri_ref!("example/").has_trailing_slash());
-        assert_eq!(true, uri_ref!("/example/").has_trailing_slash());
-        assert_eq!(true, uri_ref!("/example/#frag").has_trailing_slash());
-        assert_eq!(true, uri_ref!("example/?query#frag").has_trailing_slash());
-        assert_eq!(true, uri_ref!("coap://example//").has_trailing_slash());
-        assert_eq!(false, uri_ref!("example").has_trailing_slash());
-        assert_eq!(false, uri_ref!("example?/").has_trailing_slash());
-        assert_eq!(false, uri_ref!("example#/").has_trailing_slash());
-        assert_eq!(false, uri_ref!("example/x").has_trailing_slash());
-        assert_eq!(false, uri_ref!("e/x/a/m/p/l/e?/#/").has_trailing_slash());
+        assert_eq!(true, iuri_ref!("example/").has_trailing_slash());
+        assert_eq!(true, iuri_ref!("/example/").has_trailing_slash());
+        assert_eq!(true, iuri_ref!("/example/#frag").has_trailing_slash());
+        assert_eq!(true, iuri_ref!("example/?query#frag").has_trailing_slash());
+        assert_eq!(true, iuri_ref!("coap://example//").has_trailing_slash());
+        assert_eq!(false, iuri_ref!("example").has_trailing_slash());
+        assert_eq!(false, iuri_ref!("example?/").has_trailing_slash());
+        assert_eq!(false, iuri_ref!("example#/").has_trailing_slash());
+        assert_eq!(false, iuri_ref!("example/x").has_trailing_slash());
+        assert_eq!(false, iuri_ref!("e/x/a/m/p/l/e?/#/").has_trailing_slash());
     }
 
     #[test]
     fn try_trim_resource() {
-        assert_eq!(uri_ref!("example/"), uri_ref!("example/").trim_resource());
-        assert_eq!(uri_ref!("/example/"), uri_ref!("/example/").trim_resource());
+        assert_eq!(iuri_ref!("example/"), iuri_ref!("example/").trim_resource());
         assert_eq!(
-            uri_ref!("/example/"),
-            uri_ref!("/example/#frag").trim_resource()
+            iuri_ref!("/example/"),
+            iuri_ref!("/example/").trim_resource()
         );
         assert_eq!(
-            uri_ref!("example/"),
-            uri_ref!("example/?query#frag").trim_resource()
+            iuri_ref!("/example/"),
+            iuri_ref!("/example/#frag").trim_resource()
         );
         assert_eq!(
-            uri_ref!("coap://example//"),
-            uri_ref!("coap://example//").trim_resource()
+            iuri_ref!("example/"),
+            iuri_ref!("example/?query#frag").trim_resource()
         );
-        assert_eq!(uri_ref!(""), uri_ref!("example").trim_resource());
-        assert_eq!(uri_ref!(""), uri_ref!("example?/").trim_resource());
-        assert_eq!(uri_ref!(""), uri_ref!("example#/").trim_resource());
-        assert_eq!(uri_ref!("example/"), uri_ref!("example/x").trim_resource());
         assert_eq!(
-            uri_ref!("e/x/a/m/p/l/"),
-            uri_ref!("e/x/a/m/p/l/e?/#/").trim_resource()
+            iuri_ref!("coap://example//"),
+            iuri_ref!("coap://example//").trim_resource()
+        );
+        assert_eq!(iuri_ref!(""), iuri_ref!("example").trim_resource());
+        assert_eq!(iuri_ref!(""), iuri_ref!("example?/").trim_resource());
+        assert_eq!(iuri_ref!(""), iuri_ref!("example#/").trim_resource());
+        assert_eq!(
+            iuri_ref!("example/"),
+            iuri_ref!("example/x").trim_resource()
+        );
+        assert_eq!(
+            iuri_ref!("e/x/a/m/p/l/"),
+            iuri_ref!("e/x/a/m/p/l/e?/#/").trim_resource()
         );
     }
 
     #[test]
     fn trim_to_shorten() {
         assert_eq!(
-            Some(rel_ref!("c")),
-            uri_ref!("/a/b/c").trim_to_shorten(uri_ref!("/a/b/"))
+            Some(irel_ref!("c")),
+            iuri_ref!("/a/b/c").trim_to_shorten(iuri_ref!("/a/b/"))
         );
         assert_eq!(
-            Some(rel_ref!("c/d/e")),
-            uri_ref!("/a/b/c/d/e").trim_to_shorten(uri_ref!("/a/b/"))
-        );
-        assert_eq!(
-            None,
-            uri_ref!("/a/b/c/d/e").trim_to_shorten(uri_ref!("/a/c/"))
-        );
-        assert_eq!(
-            Some(rel_ref!("c/d/e")),
-            uri_ref!("/a/b/c/d/e").trim_to_shorten(uri_ref!("coap://blah/a/b/"))
-        );
-        assert_eq!(
-            Some(rel_ref!("c/d/e")),
-            uri_ref!("coap://blah/a/b/c/d/e").trim_to_shorten(uri_ref!("coap://blah/a/b/"))
+            Some(irel_ref!("c/d/e")),
+            iuri_ref!("/a/b/c/d/e").trim_to_shorten(iuri_ref!("/a/b/"))
         );
         assert_eq!(
             None,
-            uri_ref!("coap://blah/a/b/c/d/e").trim_to_shorten(uri_ref!("/a/b/"))
+            iuri_ref!("/a/b/c/d/e").trim_to_shorten(iuri_ref!("/a/c/"))
         );
         assert_eq!(
-            Some(rel_ref!("c")),
-            uri_ref!("/a/b/c").trim_to_shorten(uri_ref!("/a/b/d"))
+            Some(irel_ref!("c/d/e")),
+            iuri_ref!("/a/b/c/d/e").trim_to_shorten(iuri_ref!("coap://blah/a/b/"))
+        );
+        assert_eq!(
+            Some(irel_ref!("c/d/e")),
+            iuri_ref!("coap://blah/a/b/c/d/e").trim_to_shorten(iuri_ref!("coap://blah/a/b/"))
+        );
+        assert_eq!(
+            None,
+            iuri_ref!("coap://blah/a/b/c/d/e").trim_to_shorten(iuri_ref!("/a/b/"))
+        );
+        assert_eq!(
+            Some(irel_ref!("c")),
+            iuri_ref!("/a/b/c").trim_to_shorten(iuri_ref!("/a/b/d"))
         );
     }
 
@@ -1110,40 +1119,40 @@ mod tests {
     fn userinfo_host_port() {
         let uri_test_table = vec![
             (
-                uri_ref!("http://example.com/a/b/c"),
+                iuri_ref!("http://example.com/a/b/c"),
                 Some((None, "example.com", None)),
             ),
             (
-                uri_ref!("http://example.com:1234/a/b/c"),
+                iuri_ref!("http://example.com:1234/a/b/c"),
                 Some((None, "example.com", Some(1234u16))),
             ),
             (
-                uri_ref!("http://example.com:/a/b/c"),
+                iuri_ref!("http://example.com:/a/b/c"),
                 Some((None, "example.com", None)),
             ),
             (
-                uri_ref!("http://username@example.com/a/b/c"),
+                iuri_ref!("http://username@example.com/a/b/c"),
                 Some((Some("username"), "example.com", None)),
             ),
             (
-                uri_ref!("http://username:password@example.com/a/b/c"),
+                iuri_ref!("http://username:password@example.com/a/b/c"),
                 Some((Some("username:password"), "example.com", None)),
             ),
             (
-                uri_ref!("http://username:password@example.com:1234/a/b/c"),
+                iuri_ref!("http://username:password@example.com:1234/a/b/c"),
                 Some((Some("username:password"), "example.com", Some(1234))),
             ),
             (
-                uri_ref!("http://username:password@example.com:1234567/a/b/c"),
+                iuri_ref!("http://username:password@example.com:1234567/a/b/c"),
                 Some((Some("username:password"), "example.com", None)),
             ),
-            (uri_ref!("http://[::1]/a/b/c"), Some((None, "::1", None))),
+            (iuri_ref!("http://[::1]/a/b/c"), Some((None, "::1", None))),
             (
-                uri_ref!("http://[::1]:1234/a/b/c"),
+                iuri_ref!("http://[::1]:1234/a/b/c"),
                 Some((None, "::1", Some(1234))),
             ),
             (
-                uri_ref!("http://username:password@[::1]:1234/a/b/c"),
+                iuri_ref!("http://username:password@[::1]:1234/a/b/c"),
                 Some((Some("username:password"), "::1", Some(1234))),
             ),
         ];

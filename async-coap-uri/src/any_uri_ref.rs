@@ -211,9 +211,9 @@ pub trait AnyUriRefExt: AnyUriRef {
 
             if target_type.has_absolute_path() {
                 if base_starts_with_slash {
-                    base_path = rel_ref!("");
+                    base_path = irel_ref!("");
                 } else {
-                    base_path = rel_ref!("/");
+                    base_path = irel_ref!("/");
                 }
             } else if !target_path.is_empty() {
                 base_path = base_path.trim_resource();
@@ -366,38 +366,38 @@ mod test {
             (
                 "http://x/a/b/c",
                 "/abs-path",
-                Some(uri_ref!("http://x/abs-path")),
+                Some(iuri_ref!("http://x/abs-path")),
             ),
             (
                 "http://x/a/b/c",
                 "f/s?c",
-                Some(uri_ref!("http://x/a/b/f/s?c")),
+                Some(iuri_ref!("http://x/a/b/f/s?c")),
             ),
             (
                 "http://x/a/b/c",
                 "/abs-path",
-                Some(uri_ref!("http://x/abs-path")),
+                Some(iuri_ref!("http://x/abs-path")),
             ),
             (
                 "http://x/a/b/c",
                 "path",
-                Some(uri_ref!("http://x/a/b/path")),
+                Some(iuri_ref!("http://x/a/b/path")),
             ),
             (
                 "http://x/a/b/c/",
                 "path",
-                Some(uri_ref!("http://x/a/b/c/path")),
+                Some(iuri_ref!("http://x/a/b/c/path")),
             ),
             (
                 "http://x/a/b/c/",
                 "//y/d/e/f/",
-                Some(uri_ref!("http://y/d/e/f/")),
+                Some(iuri_ref!("http://y/d/e/f/")),
             ),
-            ("http://x/a/b/c", "?", Some(uri_ref!("http://x/a/b/c?"))),
-            ("http://x", "a/b/c", Some(uri_ref!("http://x/a/b/c"))),
-            ("http://x", "/a/b/c", Some(uri_ref!("http://x/a/b/c"))),
-            ("http://x/", "a/b/c", Some(uri_ref!("http://x/a/b/c"))),
-            ("http://x/a/b/c", "coap://x", Some(uri_ref!("coap://x"))),
+            ("http://x/a/b/c", "?", Some(iuri_ref!("http://x/a/b/c?"))),
+            ("http://x", "a/b/c", Some(iuri_ref!("http://x/a/b/c"))),
+            ("http://x", "/a/b/c", Some(iuri_ref!("http://x/a/b/c"))),
+            ("http://x/", "a/b/c", Some(iuri_ref!("http://x/a/b/c"))),
+            ("http://x/a/b/c", "coap://x", Some(iuri_ref!("coap://x"))),
         ];
 
         for (a, b, c) in uri_test_table {
@@ -417,47 +417,47 @@ mod test {
     #[test]
     fn resolve_relative_base() {
         let uri_test_table = vec![
-            ("b/c/d;p?q", "g:h", Some(uri_ref!("g:h"))),
-            ("b/c/d;p?q", "g", Some(uri_ref!("b/c/g"))),
-            ("b/c/d;p?q", "./g", Some(uri_ref!("b/c/g"))),
-            ("b/c/d;p?q", "g/", Some(uri_ref!("b/c/g/"))),
-            ("b/c/d;p?q", "/g", Some(uri_ref!("/g"))),
-            ("b/c/d;p?q", "//g", Some(uri_ref!("//g"))),
-            ("b/c/d;p?q", "?y", Some(uri_ref!("b/c/d;p?y"))),
-            ("b/c/d;p?q", "g?y", Some(uri_ref!("b/c/g?y"))),
-            ("b/c/d;p?q", "#s", Some(uri_ref!("b/c/d;p?q#s"))),
-            ("b/c/d;p?q", "g#s", Some(uri_ref!("b/c/g#s"))),
-            ("b/c/d;p?q", "g?y#s", Some(uri_ref!("b/c/g?y#s"))),
-            ("b/c/d;p?q", ";x", Some(uri_ref!("b/c/;x"))),
-            ("b/c/d;p?q", "g;x", Some(uri_ref!("b/c/g;x"))),
-            ("b/c/d;p?q", "g;x?y#s", Some(uri_ref!("b/c/g;x?y#s"))),
-            ("b/c/d;p?q", "", Some(uri_ref!("b/c/d;p?q"))),
-            ("b/c/d;p?q", ".", Some(uri_ref!("b/c/"))),
-            ("b/c/d;p?q", "./", Some(uri_ref!("b/c/"))),
-            ("b/c/d;p?q", "/./g", Some(uri_ref!("/g"))),
-            ("b/c/d;p?q", "g.", Some(uri_ref!("b/c/g."))),
-            ("b/c/d;p?q", ".g", Some(uri_ref!("b/c/.g"))),
-            ("b/c/d;p?q", "g..", Some(uri_ref!("b/c/g.."))),
-            ("b/c/d;p?q", "..g", Some(uri_ref!("b/c/..g"))),
-            ("b/c/d;p?q", "g?y/./x", Some(uri_ref!("b/c/g?y/./x"))),
-            ("b/c/d;p?q", "g?y/../x", Some(uri_ref!("b/c/g?y/../x"))),
-            ("b/c/d;p?q", "g#s/./x", Some(uri_ref!("b/c/g#s/./x"))),
-            ("b/c/d;p?q", "g#s/../x", Some(uri_ref!("b/c/g#s/../x"))),
-            ("b/c/d;p?q", "..", Some(uri_ref!("b/"))),
-            ("b/c/d;p?q", "../", Some(uri_ref!("b/"))),
-            ("b/c/d;p?q", "../g", Some(uri_ref!("b/g"))),
-            ("b/c/d;p?q", "../..", Some(uri_ref!("."))),
-            ("b/c/d;p?q", "../../", Some(uri_ref!("."))),
-            ("b/c/d;p?q", "../../g", Some(uri_ref!("g"))),
-            ("b/c/d;p?q", "../../../g", Some(uri_ref!("../g"))),
-            ("b/c/d;p?q", "../../../../g", Some(uri_ref!("../../g"))),
-            ("b/c/d;p?q", "/../g", Some(uri_ref!("/g"))),
-            ("b/c/d;p?q", "./../g", Some(uri_ref!("b/g"))),
-            ("b/c/d;p?q", "./g/.", Some(uri_ref!("b/c/g/"))),
-            ("b/c/d;p?q", "g/./h", Some(uri_ref!("b/c/g/h"))),
-            ("b/c/d;p?q", "g/../h", Some(uri_ref!("b/c/h"))),
-            ("b/c/d;p?q", "g;x=1/./y", Some(uri_ref!("b/c/g;x=1/y"))),
-            ("b/c/d;p?q", "g;x=1/../y", Some(uri_ref!("b/c/y"))),
+            ("b/c/d;p?q", "g:h", Some(iuri_ref!("g:h"))),
+            ("b/c/d;p?q", "g", Some(iuri_ref!("b/c/g"))),
+            ("b/c/d;p?q", "./g", Some(iuri_ref!("b/c/g"))),
+            ("b/c/d;p?q", "g/", Some(iuri_ref!("b/c/g/"))),
+            ("b/c/d;p?q", "/g", Some(iuri_ref!("/g"))),
+            ("b/c/d;p?q", "//g", Some(iuri_ref!("//g"))),
+            ("b/c/d;p?q", "?y", Some(iuri_ref!("b/c/d;p?y"))),
+            ("b/c/d;p?q", "g?y", Some(iuri_ref!("b/c/g?y"))),
+            ("b/c/d;p?q", "#s", Some(iuri_ref!("b/c/d;p?q#s"))),
+            ("b/c/d;p?q", "g#s", Some(iuri_ref!("b/c/g#s"))),
+            ("b/c/d;p?q", "g?y#s", Some(iuri_ref!("b/c/g?y#s"))),
+            ("b/c/d;p?q", ";x", Some(iuri_ref!("b/c/;x"))),
+            ("b/c/d;p?q", "g;x", Some(iuri_ref!("b/c/g;x"))),
+            ("b/c/d;p?q", "g;x?y#s", Some(iuri_ref!("b/c/g;x?y#s"))),
+            ("b/c/d;p?q", "", Some(iuri_ref!("b/c/d;p?q"))),
+            ("b/c/d;p?q", ".", Some(iuri_ref!("b/c/"))),
+            ("b/c/d;p?q", "./", Some(iuri_ref!("b/c/"))),
+            ("b/c/d;p?q", "/./g", Some(iuri_ref!("/g"))),
+            ("b/c/d;p?q", "g.", Some(iuri_ref!("b/c/g."))),
+            ("b/c/d;p?q", ".g", Some(iuri_ref!("b/c/.g"))),
+            ("b/c/d;p?q", "g..", Some(iuri_ref!("b/c/g.."))),
+            ("b/c/d;p?q", "..g", Some(iuri_ref!("b/c/..g"))),
+            ("b/c/d;p?q", "g?y/./x", Some(iuri_ref!("b/c/g?y/./x"))),
+            ("b/c/d;p?q", "g?y/../x", Some(iuri_ref!("b/c/g?y/../x"))),
+            ("b/c/d;p?q", "g#s/./x", Some(iuri_ref!("b/c/g#s/./x"))),
+            ("b/c/d;p?q", "g#s/../x", Some(iuri_ref!("b/c/g#s/../x"))),
+            ("b/c/d;p?q", "..", Some(iuri_ref!("b/"))),
+            ("b/c/d;p?q", "../", Some(iuri_ref!("b/"))),
+            ("b/c/d;p?q", "../g", Some(iuri_ref!("b/g"))),
+            ("b/c/d;p?q", "../..", Some(iuri_ref!("."))),
+            ("b/c/d;p?q", "../../", Some(iuri_ref!("."))),
+            ("b/c/d;p?q", "../../g", Some(iuri_ref!("g"))),
+            ("b/c/d;p?q", "../../../g", Some(iuri_ref!("../g"))),
+            ("b/c/d;p?q", "../../../../g", Some(iuri_ref!("../../g"))),
+            ("b/c/d;p?q", "/../g", Some(iuri_ref!("/g"))),
+            ("b/c/d;p?q", "./../g", Some(iuri_ref!("b/g"))),
+            ("b/c/d;p?q", "./g/.", Some(iuri_ref!("b/c/g/"))),
+            ("b/c/d;p?q", "g/./h", Some(iuri_ref!("b/c/g/h"))),
+            ("b/c/d;p?q", "g/../h", Some(iuri_ref!("b/c/h"))),
+            ("b/c/d;p?q", "g;x=1/./y", Some(iuri_ref!("b/c/g;x=1/y"))),
+            ("b/c/d;p?q", "g;x=1/../y", Some(iuri_ref!("b/c/y"))),
         ];
 
         for (a, b, c) in uri_test_table {
@@ -480,11 +480,11 @@ mod test {
             ("s:123", "/a/b/c", None),
             ("s:123", "//a/b/c", None),
             ("s:123", ".", None),
-            ("s:123", "", Some(uri_ref!("s:123"))),
-            ("s:123", "?q=123", Some(uri_ref!("s:123?q=123"))),
-            ("s:123", "#frag", Some(uri_ref!("s:123#frag"))),
-            ("s:123", "#frag", Some(uri_ref!("s:123#frag"))),
-            ("s:123", "file:/d/e/f", Some(uri_ref!("file:/d/e/f"))),
+            ("s:123", "", Some(iuri_ref!("s:123"))),
+            ("s:123", "?q=123", Some(iuri_ref!("s:123?q=123"))),
+            ("s:123", "#frag", Some(iuri_ref!("s:123#frag"))),
+            ("s:123", "#frag", Some(iuri_ref!("s:123#frag"))),
+            ("s:123", "file:/d/e/f", Some(iuri_ref!("file:/d/e/f"))),
         ];
 
         for (a, b, c) in uri_test_table {
@@ -504,8 +504,8 @@ mod test {
     #[test]
     fn resolve_no_authority() {
         let uri_test_table = vec![
-            ("file:/d/e/f", "//a/b/c", Some(uri_ref!("file://a/b/c"))),
-            ("file:/d/e/f", "g", Some(uri_ref!("file:/d/e/g"))),
+            ("file:/d/e/f", "//a/b/c", Some(iuri_ref!("file://a/b/c"))),
+            ("file:/d/e/f", "g", Some(iuri_ref!("file:/d/e/g"))),
         ];
 
         for (a, b, c) in uri_test_table {
@@ -526,107 +526,107 @@ mod test {
     fn resolve_rfc3986_simple() {
         let uri_test_table = vec![
             // The following test vectors came directly from RFC3986
-            ("http://a/b/c/d;p?q", "g:h", Some(uri_ref!("g:h"))),
-            ("http://a/b/c/d;p?q", "g", Some(uri_ref!("http://a/b/c/g"))),
+            ("http://a/b/c/d;p?q", "g:h", Some(iuri_ref!("g:h"))),
+            ("http://a/b/c/d;p?q", "g", Some(iuri_ref!("http://a/b/c/g"))),
             (
                 "http://a/b/c/d;p?q",
                 "./g",
-                Some(uri_ref!("http://a/b/c/g")),
+                Some(iuri_ref!("http://a/b/c/g")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g/",
-                Some(uri_ref!("http://a/b/c/g/")),
+                Some(iuri_ref!("http://a/b/c/g/")),
             ),
-            ("http://a/b/c/d;p?q", "/g", Some(uri_ref!("http://a/g"))),
-            ("http://a/b/c/d;p?q", "//g", Some(uri_ref!("http://g"))),
+            ("http://a/b/c/d;p?q", "/g", Some(iuri_ref!("http://a/g"))),
+            ("http://a/b/c/d;p?q", "//g", Some(iuri_ref!("http://g"))),
             (
                 "http://a/b/c/d;p?q",
                 "?y",
-                Some(uri_ref!("http://a/b/c/d;p?y")),
+                Some(iuri_ref!("http://a/b/c/d;p?y")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g?y",
-                Some(uri_ref!("http://a/b/c/g?y")),
+                Some(iuri_ref!("http://a/b/c/g?y")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "#s",
-                Some(uri_ref!("http://a/b/c/d;p?q#s")),
+                Some(iuri_ref!("http://a/b/c/d;p?q#s")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g#s",
-                Some(uri_ref!("http://a/b/c/g#s")),
+                Some(iuri_ref!("http://a/b/c/g#s")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g?y#s",
-                Some(uri_ref!("http://a/b/c/g?y#s")),
+                Some(iuri_ref!("http://a/b/c/g?y#s")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 ";x",
-                Some(uri_ref!("http://a/b/c/;x")),
+                Some(iuri_ref!("http://a/b/c/;x")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g;x",
-                Some(uri_ref!("http://a/b/c/g;x")),
+                Some(iuri_ref!("http://a/b/c/g;x")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g;x?y#s",
-                Some(uri_ref!("http://a/b/c/g;x?y#s")),
+                Some(iuri_ref!("http://a/b/c/g;x?y#s")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "",
-                Some(uri_ref!("http://a/b/c/d;p?q")),
+                Some(iuri_ref!("http://a/b/c/d;p?q")),
             ),
-            ("http://a/b/c/d;p?q", ".", Some(uri_ref!("http://a/b/c/"))),
-            ("http://a/b/c/d;p?q", "./", Some(uri_ref!("http://a/b/c/"))),
-            ("http://a/b/c/d;p?q", "/./g", Some(uri_ref!("http://a/g"))),
+            ("http://a/b/c/d;p?q", ".", Some(iuri_ref!("http://a/b/c/"))),
+            ("http://a/b/c/d;p?q", "./", Some(iuri_ref!("http://a/b/c/"))),
+            ("http://a/b/c/d;p?q", "/./g", Some(iuri_ref!("http://a/g"))),
             (
                 "http://a/b/c/d;p?q",
                 "g.",
-                Some(uri_ref!("http://a/b/c/g.")),
+                Some(iuri_ref!("http://a/b/c/g.")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 ".g",
-                Some(uri_ref!("http://a/b/c/.g")),
+                Some(iuri_ref!("http://a/b/c/.g")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g..",
-                Some(uri_ref!("http://a/b/c/g..")),
+                Some(iuri_ref!("http://a/b/c/g..")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "..g",
-                Some(uri_ref!("http://a/b/c/..g")),
+                Some(iuri_ref!("http://a/b/c/..g")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g?y/./x",
-                Some(uri_ref!("http://a/b/c/g?y/./x")),
+                Some(iuri_ref!("http://a/b/c/g?y/./x")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g?y/../x",
-                Some(uri_ref!("http://a/b/c/g?y/../x")),
+                Some(iuri_ref!("http://a/b/c/g?y/../x")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g#s/./x",
-                Some(uri_ref!("http://a/b/c/g#s/./x")),
+                Some(iuri_ref!("http://a/b/c/g#s/./x")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g#s/../x",
-                Some(uri_ref!("http://a/b/c/g#s/../x")),
+                Some(iuri_ref!("http://a/b/c/g#s/../x")),
             ),
         ];
 
@@ -648,56 +648,60 @@ mod test {
     fn resolve_rfc3986_dot_dot() {
         let uri_test_table = vec![
             // The following test vectors came directly from RFC3986
-            ("http://a/b/c/d;p?q", "..", Some(uri_ref!("http://a/b/"))),
-            ("http://a/b/c/d;p?q", "../", Some(uri_ref!("http://a/b/"))),
-            ("http://a/b/c/d;p?q", "../g", Some(uri_ref!("http://a/b/g"))),
-            ("http://a/b/c/d;p?q", "../..", Some(uri_ref!("http://a/"))),
-            ("http://a/b/c/d;p?q", "../../", Some(uri_ref!("http://a/"))),
+            ("http://a/b/c/d;p?q", "..", Some(iuri_ref!("http://a/b/"))),
+            ("http://a/b/c/d;p?q", "../", Some(iuri_ref!("http://a/b/"))),
+            (
+                "http://a/b/c/d;p?q",
+                "../g",
+                Some(iuri_ref!("http://a/b/g")),
+            ),
+            ("http://a/b/c/d;p?q", "../..", Some(iuri_ref!("http://a/"))),
+            ("http://a/b/c/d;p?q", "../../", Some(iuri_ref!("http://a/"))),
             (
                 "http://a/b/c/d;p?q",
                 "../../g",
-                Some(uri_ref!("http://a/g")),
+                Some(iuri_ref!("http://a/g")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "../../../g",
-                Some(uri_ref!("http://a/g")),
+                Some(iuri_ref!("http://a/g")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "../../../../g",
-                Some(uri_ref!("http://a/g")),
+                Some(iuri_ref!("http://a/g")),
             ),
-            ("http://a/b/c/d;p?q", "/../g", Some(uri_ref!("http://a/g"))),
+            ("http://a/b/c/d;p?q", "/../g", Some(iuri_ref!("http://a/g"))),
             (
                 "http://a/b/c/d;p?q",
                 "./../g",
-                Some(uri_ref!("http://a/b/g")),
+                Some(iuri_ref!("http://a/b/g")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "./g/.",
-                Some(uri_ref!("http://a/b/c/g/")),
+                Some(iuri_ref!("http://a/b/c/g/")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g/./h",
-                Some(uri_ref!("http://a/b/c/g/h")),
+                Some(iuri_ref!("http://a/b/c/g/h")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g/../h",
-                Some(uri_ref!("http://a/b/c/h")),
+                Some(iuri_ref!("http://a/b/c/h")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g;x=1/./y",
-                Some(uri_ref!("http://a/b/c/g;x=1/y")),
+                Some(iuri_ref!("http://a/b/c/g;x=1/y")),
             ),
             (
                 "http://a/b/c/d;p?q",
                 "g;x=1/../y",
-                Some(uri_ref!("http://a/b/c/y")),
+                Some(iuri_ref!("http://a/b/c/y")),
             ),
         ];
 
