@@ -93,7 +93,7 @@ where
     local_endpoint: Weak<DatagramLocalEndpointInner<US>>,
     dest: US::SocketAddr,
 
-    msg_id: MsgId,
+    msg_id: Cell<MsgId>,
     msg_token: Cell<MsgToken>,
     retransmit_count: Cell<u32>,
     delay: Option<Delay>,
@@ -161,8 +161,15 @@ where
 
         let mut token = self.msg_token.get();
 
+        // We allocate a new msg_id for every call to `transmit()`.
+        self.msg_id.replace(self.local_endpoint
+            .upgrade()
+            .ok_or(Error::Cancelled)?
+            .next_msg_id()
+        );
+
         if token.is_empty() {
-            token = MsgToken::from(self.msg_id);
+            token = MsgToken::from(self.msg_id.get());
         }
 
         builder.set_msg_token(token);
@@ -180,7 +187,7 @@ where
         self.msg_token.replace(builder_token);
 
         // We always control the msg_id.
-        builder.set_msg_id(self.msg_id);
+        builder.set_msg_id(self.msg_id.get());
 
         println!("OUTBOUND: {} {}", self.dest, builder);
 
@@ -227,7 +234,7 @@ where
         )?;
         self.send_desc.write_payload(&mut builder, &self.dest)?;
 
-        builder.set_msg_id(self.msg_id);
+        builder.set_msg_id(self.msg_id.get());
 
         println!(
             "OUTBOUND[{}]: {} {}",
@@ -352,7 +359,7 @@ where
                 send_desc,
                 state: UdpSendFutureState::Uninit,
                 waker: None,
-                msg_id: local_endpoint.next_msg_id(),
+                msg_id: Cell::new(0),
                 msg_token: Cell::new(MsgToken::EMPTY),
                 local_endpoint: Arc::downgrade(&local_endpoint),
                 dest,
@@ -388,7 +395,7 @@ where
                         .upgrade()
                         .ok_or(Error::Cancelled)?
                         .add_response_handler(
-                            inner.msg_id,
+                            inner.msg_id.get(),
                             inner.msg_token.get(),
                             inner.dest.clone(),
                             self.inner.clone(),
@@ -473,7 +480,7 @@ where
         };
 
         if let Some(le) = inner.local_endpoint.upgrade() {
-            le.remove_response_handler(inner.msg_id, inner.msg_token.get(), inner.dest.clone());
+            le.remove_response_handler(inner.msg_id.get(), inner.msg_token.get(), inner.dest.clone());
         }
     }
 }
