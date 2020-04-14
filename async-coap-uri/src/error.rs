@@ -45,6 +45,9 @@ impl fmt::Display for ResolveError {
     }
 }
 
+#[cfg(feature = "std")]
+impl ::std::error::Error for ResolveError {}
+
 /// Transparent conversions from [`core::fmt::Error`] to [`ResolveError`].
 impl From<::core::fmt::Error> for ResolveError {
     fn from(_: ::core::fmt::Error) -> Self {
@@ -86,6 +89,9 @@ impl fmt::Display for ParseError {
         write!(f, "{}", self.desc)
     }
 }
+
+#[cfg(feature = "std")]
+impl ::std::error::Error for ParseError {}
 
 impl From<crate::escape::DecodingError> for ParseError {
     fn from(error: crate::escape::DecodingError) -> Self {
