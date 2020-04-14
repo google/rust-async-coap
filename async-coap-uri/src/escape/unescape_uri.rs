@@ -227,6 +227,9 @@ pub struct DecodingError {
     pub index: usize,
 }
 
+#[cfg(feature = "std")]
+impl ::std::error::Error for DecodingError {}
+
 impl fmt::Display for DecodingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inner)
@@ -283,6 +286,9 @@ impl fmt::Display for UnescapeError {
         }
     }
 }
+
+#[cfg(feature = "std")]
+impl ::std::error::Error for UnescapeError {}
 
 impl<'a> Iterator for UnescapeUri<'a> {
     type Item = char;
