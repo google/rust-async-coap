@@ -131,8 +131,11 @@ impl<'a> UnescapeUri<'a> {
 
     /// Attempts to losslessly decode the string, returning it as a copy-on-write type.
     ///
-    /// If the string cannot be decoded losslessly, then the location of the encoding
-    /// error is returned as an `Err`.
+    /// # Errors
+    ///
+    /// If the string cannot be decoded losslessly, then a [`DecodingError`] is
+    /// returned, from which the location of the decoding error can be obtained
+    /// with [`DecodingError::index`].
     #[cfg(feature = "std")]
     pub fn try_to_cow(&self) -> Result<Cow<'a, str>, DecodingError> {
         let as_str = self.iter.as_str();
