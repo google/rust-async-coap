@@ -28,6 +28,8 @@ use quote::quote;
 use regex::Regex;
 use syn::LitStr;
 
+mod error;
+use error::Error;
 mod unescape_uri;
 use unescape_uri::UnescapeUri;
 
@@ -60,28 +62,6 @@ lazy_static! {
     // Splits the authority into "userinfo", "host", and "port"
     pub(crate) static ref URI_AUTHORITY: Regex = Regex::new(r#"^(([^@/?#]+)@)?([^\[\]:]+|\[[^\]]+\])(:([0-9]+))?$"#)
         .expect("URI_AUTHORITY");
-}
-
-#[derive(Copy, Clone, Eq, PartialEq)]
-enum Error {
-    #[allow(unused)]
-    EncodingError,
-    MalformedStructure,
-    MalformedScheme,
-    Degenerate,
-}
-
-impl std::fmt::Debug for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            Error::EncodingError => f.write_str("Encoding Error"),
-            Error::MalformedStructure => f.write_str("The structure of the URI is not recognized."),
-            Error::MalformedScheme => f.write_str("The scheme of the URI is malformed."),
-            Error::Degenerate => {
-                f.write_str("This relative reference could be confused with a URI.")
-            }
-        }
-    }
 }
 
 fn assert_uri_str(uri_str: &str) -> Result<(), Error> {
