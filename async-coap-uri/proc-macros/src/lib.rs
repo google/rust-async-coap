@@ -21,14 +21,12 @@
 
 extern crate proc_macro;
 
-#[macro_use]
-extern crate lazy_static;
-
 use crate::proc_macro::TokenStream;
+use lazy_static::lazy_static;
 use proc_macro_hack::proc_macro_hack;
 use quote::quote;
 use regex::Regex;
-use syn;
+use syn::LitStr;
 
 mod unescape_uri;
 use unescape_uri::UnescapeUri;
@@ -129,8 +127,6 @@ fn assert_uri_ref_str(uri_str: &str) -> Result<(), Error> {
 }
 
 fn string_literal_from_token_stream(input: TokenStream) -> String {
-    use syn::LitStr;
-
     if let Some(nom) = syn::parse::<LitStr>(input.clone()).ok() {
         return nom.value();
     }
