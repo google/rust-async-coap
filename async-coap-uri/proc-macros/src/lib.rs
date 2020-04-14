@@ -28,8 +28,9 @@ use quote::quote;
 use regex::Regex;
 use syn::LitStr;
 
-mod error;
-use error::Error;
+mod parse_error;
+use parse_error::ParseError;
+
 mod unescape_uri;
 use unescape_uri::UnescapeUri;
 
@@ -64,44 +65,44 @@ lazy_static! {
         .expect("URI_AUTHORITY");
 }
 
-fn assert_uri_str(uri_str: &str) -> Result<(), Error> {
+fn assert_uri_str(uri_str: &str) -> Result<(), ParseError> {
     let captures = RFC3986_APPENDIX_B
         .captures(uri_str)
-        .ok_or(Error::MalformedStructure)?;
+        .ok_or(ParseError::MalformedStructure)?;
 
     let has_scheme = captures.get(2).is_some();
     let has_authority = captures.get(4).is_some();
 
     if !has_scheme && !has_authority {
-        return Err(Error::MalformedStructure);
+        return Err(ParseError::MalformedStructure);
     }
 
     if let Some(scheme) = captures.get(2) {
         // Do an additional syntax check on the scheme to make sure it is valid.
         URI_CHECK_SCHEME
             .captures(scheme.as_str())
-            .ok_or(Error::MalformedScheme)?;
+            .ok_or(ParseError::MalformedScheme)?;
     }
 
     Ok(())
 }
 
-fn assert_rel_ref_str(uri_str: &str) -> Result<(), Error> {
+fn assert_rel_ref_str(uri_str: &str) -> Result<(), ParseError> {
     // We should not be able to parse as a URI.
     assert_uri_str(uri_str)
         .err()
         .map(|_| ())
-        .ok_or(Error::Degenerate)?;
+        .ok_or(ParseError::Degenerate)?;
 
     // We should be able to parse as a URI-Reference
     assert_uri_ref_str(uri_str)
 }
 
-fn assert_uri_ref_str(uri_str: &str) -> Result<(), Error> {
+fn assert_uri_ref_str(uri_str: &str) -> Result<(), ParseError> {
     // Not sure what additional checks to do in this case.
     RFC3986_APPENDIX_B
         .captures(uri_str)
-        .ok_or(Error::MalformedStructure)?;
+        .ok_or(ParseError::MalformedStructure)?;
 
     Ok(())
 }
@@ -166,23 +167,23 @@ pub fn assert_uri_ref_literal(input: TokenStream) -> TokenStream {
 mod test {
     use super::*;
 
-    fn check_uri_str(uri_str: &str) -> Result<(), Error> {
+    fn check_uri_str(uri_str: &str) -> Result<(), ParseError> {
         if let Some(_) = UnescapeUri::new(uri_str).first_error() {
-            return Err(Error::EncodingError);
+            return Err(ParseError::EncodingError);
         }
         assert_uri_str(uri_str)
     }
 
-    fn check_rel_ref_str(uri_str: &str) -> Result<(), Error> {
+    fn check_rel_ref_str(uri_str: &str) -> Result<(), ParseError> {
         if let Some(_) = UnescapeUri::new(uri_str).first_error() {
-            return Err(Error::EncodingError);
+            return Err(ParseError::EncodingError);
         }
         assert_rel_ref_str(uri_str)
     }
 
-    fn check_uri_ref_str(uri_str: &str) -> Result<(), Error> {
+    fn check_uri_ref_str(uri_str: &str) -> Result<(), ParseError> {
         if let Some(_) = UnescapeUri::new(uri_str).first_error() {
-            return Err(Error::EncodingError);
+            return Err(ParseError::EncodingError);
         }
         assert_uri_ref_str(uri_str)
     }
@@ -192,31 +193,40 @@ mod test {
         assert_eq!(check_uri_str("g:a/b/c"), Ok(()));
         assert_eq!(check_uri_str("g+z://a/b/c"), Ok(()));
         assert_eq!(check_uri_str("//a/b/c"), Ok(()));
-        assert_eq!(check_uri_str("a/b/c"), Err(Error::MalformedStructure));
-        assert_eq!(check_uri_str("g$:a/b/c"), Err(Error::MalformedScheme));
-        assert_eq!(check_uri_str("g%:a/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_str("g:%aa/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_str("g:%00/b/c"), Err(Error::EncodingError));
+        assert_eq!(check_uri_str("a/b/c"), Err(ParseError::MalformedStructure));
+        assert_eq!(check_uri_str("g$:a/b/c"), Err(ParseError::MalformedScheme));
+        assert_eq!(check_uri_str("g%:a/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_uri_str("g:%aa/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_uri_str("g:%00/b/c"), Err(ParseError::EncodingError));
     }
 
     #[test]
     fn test_rel_ref() {
         assert_eq!(check_rel_ref_str("/a/b/c"), Ok(()));
         assert_eq!(check_rel_ref_str("a/b/c"), Ok(()));
-        assert_eq!(check_rel_ref_str("g:a/b/c"), Err(Error::Degenerate));
+        assert_eq!(check_rel_ref_str("g:a/b/c"), Err(ParseError::Degenerate));
         assert_eq!(check_rel_ref_str("g%3Aa/b/c"), Ok(()));
         assert_eq!(check_rel_ref_str("./g:a/b/c"), Ok(()));
-        assert_eq!(check_rel_ref_str("//a/b/c"), Err(Error::Degenerate));
+        assert_eq!(check_rel_ref_str("//a/b/c"), Err(ParseError::Degenerate));
         assert_eq!(check_rel_ref_str("/.//a/b/c"), Ok(()));
         assert_eq!(check_rel_ref_str("g$:a/b/c"), Ok(()));
-        assert_eq!(check_rel_ref_str("g%:a/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("g:%aa/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("g:%00/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("%a/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("%aa/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("%00/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("a/ /c"), Err(Error::EncodingError));
-        assert_eq!(check_rel_ref_str("a/\n/c"), Err(Error::EncodingError));
+        assert_eq!(
+            check_rel_ref_str("g%:a/b/c"),
+            Err(ParseError::EncodingError)
+        );
+        assert_eq!(
+            check_rel_ref_str("g:%aa/b/c"),
+            Err(ParseError::EncodingError)
+        );
+        assert_eq!(
+            check_rel_ref_str("g:%00/b/c"),
+            Err(ParseError::EncodingError)
+        );
+        assert_eq!(check_rel_ref_str("%a/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_rel_ref_str("%aa/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_rel_ref_str("%00/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_rel_ref_str("a/ /c"), Err(ParseError::EncodingError));
+        assert_eq!(check_rel_ref_str("a/\n/c"), Err(ParseError::EncodingError));
     }
 
     #[test]
@@ -229,13 +239,22 @@ mod test {
         assert_eq!(check_uri_ref_str("//a/b/c"), Ok(()));
         assert_eq!(check_uri_ref_str("/.//a/b/c"), Ok(()));
         assert_eq!(check_uri_ref_str("g$:a/b/c"), Ok(()));
-        assert_eq!(check_uri_ref_str("g%:a/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("g:%aa/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("g:%00/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("%a/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("%aa/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("%00/b/c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("a/ /c"), Err(Error::EncodingError));
-        assert_eq!(check_uri_ref_str("a/\n/c"), Err(Error::EncodingError));
+        assert_eq!(
+            check_uri_ref_str("g%:a/b/c"),
+            Err(ParseError::EncodingError)
+        );
+        assert_eq!(
+            check_uri_ref_str("g:%aa/b/c"),
+            Err(ParseError::EncodingError)
+        );
+        assert_eq!(
+            check_uri_ref_str("g:%00/b/c"),
+            Err(ParseError::EncodingError)
+        );
+        assert_eq!(check_uri_ref_str("%a/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_uri_ref_str("%aa/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_uri_ref_str("%00/b/c"), Err(ParseError::EncodingError));
+        assert_eq!(check_uri_ref_str("a/ /c"), Err(ParseError::EncodingError));
+        assert_eq!(check_uri_ref_str("a/\n/c"), Err(ParseError::EncodingError));
     }
 }
