@@ -93,8 +93,8 @@ impl fmt::Display for ParseError {
 #[cfg(feature = "std")]
 impl ::std::error::Error for ParseError {}
 
-impl From<crate::escape::DecodingError> for ParseError {
-    fn from(error: crate::escape::DecodingError) -> Self {
+impl From<crate::escape::UnescapeError> for ParseError {
+    fn from(error: crate::escape::UnescapeError) -> Self {
         Self {
             span: Some(error.index..error.index + 1),
             desc: ParseErrorKind::EncodingError(error),
@@ -105,7 +105,7 @@ impl From<crate::escape::DecodingError> for ParseError {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum ParseErrorKind {
     /// Bad percent encoding or illegal characters
-    EncodingError(crate::escape::DecodingError),
+    EncodingError(crate::escape::UnescapeError),
     /// Missing scheme or authority
     MissingSchemeOrAuthority,
     /// Cannot find URI components
