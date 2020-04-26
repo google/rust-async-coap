@@ -1,0 +1,7 @@
+error: malformed uri scheme
+ --> $DIR/malformed_scheme.rs:7:25
+  |
+7 |     assert_uri_literal!("httpäs://www.example.com/");
+  |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

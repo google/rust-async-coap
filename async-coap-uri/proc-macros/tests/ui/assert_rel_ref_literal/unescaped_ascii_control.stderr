@@ -1,0 +1,7 @@
+error: unescaped ascii control character
+ --> $DIR/unescaped_ascii_control.rs:7:29
+  |
+7 |     assert_rel_ref_literal!("https://www.example.com/a/\n/c");
+  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

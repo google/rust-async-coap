@@ -1,0 +1,7 @@
+error: unrecognized uri structure
+ --> $DIR/malformed_structure_1.rs:7:25
+  |
+7 |     assert_uri_literal!("htt%20://www.example.com/");
+  |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

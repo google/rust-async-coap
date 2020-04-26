@@ -28,3 +28,9 @@ version = "1.3"
 default-features = false
 features = ["std", "perf", "perf-cache", "perf-dfa", "perf-inline", "perf-literal"]
 
+[dev-dependencies]
+trybuild = "1.0"
+
+[[test]]
+name = "tests"
+path = "tests/tests.rs"

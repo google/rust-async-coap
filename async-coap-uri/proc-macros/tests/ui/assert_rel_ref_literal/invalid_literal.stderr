@@ -1,0 +1,7 @@
+error: expected string literal, found int
+ --> $DIR/invalid_literal.rs:7:29
+  |
+7 |     assert_rel_ref_literal!(123);
+  |                             ^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
