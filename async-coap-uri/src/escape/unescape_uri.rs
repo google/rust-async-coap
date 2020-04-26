@@ -249,17 +249,19 @@ pub(crate) enum DecodingError {
     /// found an unescaped space (' ')
     Space,
     /// there is no char after the `%`
-    MissingChar,
+    MissingChar(u8),
     /// the char following a `%` must be an ascii character (in the range from 0-9 and a-f or A-F)
     InvalidEscape(char),
     /// We don't allow escaped ascii control codes for security reasons.
     AsciiControl(char),
     InvalidUtf8 {
         buf: [u8; 4],
-        len: usize,
+        len: u8,
     },
-    InvalidByte(u8),
-    UnexpectedChar(char),
+    UnfinishedUtf8 {
+        buf: [u8; 4],
+        len: u8,
+    },
 }
 
 impl fmt::Display for DecodingError {
@@ -269,20 +271,21 @@ impl fmt::Display for DecodingError {
                 write!(f, "unescaped ascii control character `{:?}`", c)
             }
             Self::Space => write!(f, "unescaped space ` `"),
-            Self::MissingChar => write!(f, "missing char after `%`"),
+            Self::MissingChar(n) => write!(f, "missing {} char after `%`", n),
             Self::InvalidEscape(c) => write!(
                 f,
-                "the char after `%` must be a valid hex character `{:?}`",
+                "the 2 char after `%` must be a valid hex character `{:?}`",
                 c
             ),
             Self::AsciiControl(c) => write!(
                 f,
-                "ascii control codes are not allowed for security reasons `{:?}`",
+                "ascii control chars are forbidden for security reasons `{:?}`",
                 c
             ),
-            Self::InvalidUtf8 { buf, len } => write!(f, "invalid utf8 {:?}", &buf[..*len]),
-            Self::InvalidByte(b) => write!(f, "not a valid utf8 character `{}`", b),
-            Self::UnexpectedChar(c) => write!(f, "unexpected char `{:?}`", c),
+            Self::InvalidUtf8 { buf, len } => write!(f, "invalid utf8 {:?}", &buf[..*len as usize]),
+            Self::UnfinishedUtf8 { buf, len } => {
+                write!(f, "unfinished utf8 {:?}", &buf[..*len as usize])
+            }
         }
     }
 }
@@ -342,7 +345,7 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         }
                         None => {
                             self.iter_index -= 1;
-                            self.had_error = Some(DecodingError::MissingChar);
+                            self.had_error = Some(DecodingError::MissingChar(2));
                             self.next_c = Some((c, None));
                             return Some(REPLACEMENT_CHARACTER);
                         }
@@ -365,7 +368,7 @@ impl<'a> Iterator for UnescapeUri<'a> {
                         }
                         None => {
                             self.iter_index -= 1;
-                            self.had_error = Some(DecodingError::MissingChar);
+                            self.had_error = Some(DecodingError::MissingChar(1));
                             self.next_c = Some((c, None));
                             return Some(REPLACEMENT_CHARACTER);
                         }
@@ -410,13 +413,16 @@ impl<'a> Iterator for UnescapeUri<'a> {
                             } else {
                                 self.had_error = Some(DecodingError::InvalidUtf8 {
                                     buf: utf8_buf,
-                                    len: utf8_len,
+                                    len: utf8_len as u8,
                                 });
                                 return Some(REPLACEMENT_CHARACTER);
                             }
                         }
                     } else if utf8_len != 0 {
-                        self.had_error = Some(DecodingError::InvalidByte(decoded));
+                        self.had_error = Some(DecodingError::UnfinishedUtf8 {
+                            buf: utf8_buf,
+                            len: (utf8_len * 2 + utf8_len) as u8,
+                        });
                         self.next_c = Some((decoded as char, None));
                         return Some(REPLACEMENT_CHARACTER);
                     } else {
@@ -426,7 +432,10 @@ impl<'a> Iterator for UnescapeUri<'a> {
                 c => {
                     if utf8_len != 0 {
                         self.next_c = Some((c, None));
-                        self.had_error = Some(DecodingError::UnexpectedChar(c));
+                        self.had_error = Some(DecodingError::UnfinishedUtf8 {
+                            buf: utf8_buf,
+                            len: (utf8_len * 2 + utf8_len) as u8,
+                        });
                         return Some(REPLACEMENT_CHARACTER);
                     }
 
