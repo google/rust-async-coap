@@ -160,8 +160,8 @@ impl<RC, T> ArcGuard<RC, T> {
     }
 }
 
-unsafe impl<RC, T: Send> Send for ArcGuard<RC, T> {}
-unsafe impl<RC, T: Sync> Sync for ArcGuard<RC, T> {}
+unsafe impl<RC: Send, T: Send> Send for ArcGuard<RC, T> {}
+unsafe impl<RC: Sync, T: Sync> Sync for ArcGuard<RC, T> {}
 
 impl<RC, T> Deref for ArcGuard<RC, T> {
     type Target = T;
