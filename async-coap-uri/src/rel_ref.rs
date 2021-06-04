@@ -178,10 +178,7 @@ impl RelRef {
     /// if the string slice contains data that is not a valid relative-reference.
     pub fn from_str(s: &str) -> Result<&RelRef, ParseError> {
         if let Some(first_error) = s.unescape_uri().first_error() {
-            Err(ParseError::new(
-                "Bad percent encoding or illegal characters",
-                Some(first_error..first_error + 1),
-            ))
+            Err(ParseError::from(first_error))
         } else {
             Ok(unsafe { Self::from_str_unchecked(s) })
         }
