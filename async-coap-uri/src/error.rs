@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 
+use std::fmt;
 use std::ops::Range;
 
 /// Error type for resolving a target URI against a base URI.
@@ -32,9 +33,24 @@ pub enum ResolveError {
     WriteFailure,
 }
 
+impl fmt::Display for ResolveError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Self::CannotBeABase => write!(
+                f,
+                "given uri-ref cannot be used as a base for the target uri-ref"
+            ),
+            Self::WriteFailure => write!(f, "unable to write to the given `fmt::Write` instance"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl ::std::error::Error for ResolveError {}
+
 /// Transparent conversions from [`core::fmt::Error`] to [`ResolveError`].
-impl From<core::fmt::Error> for ResolveError {
-    fn from(_: core::fmt::Error) -> Self {
+impl From<::core::fmt::Error> for ResolveError {
+    fn from(_: ::core::fmt::Error) -> Self {
         ResolveError::WriteFailure
     }
 }
@@ -44,14 +60,17 @@ impl From<core::fmt::Error> for ResolveError {
 /// This type indicates the details of an error that occurs while parsing a URI.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ParseError {
-    desc: &'static str,
+    desc: ParseErrorKind,
     span: Option<Range<usize>>,
 }
 
 impl ParseError {
     /// Constructor for URI parse errors.
     pub fn new(desc: &'static str, span: Option<Range<usize>>) -> ParseError {
-        ParseError { desc, span }
+        ParseError {
+            desc: desc.into(),
+            span,
+        }
     }
 
     /// The location in the input string of the error. Optional.
@@ -61,6 +80,75 @@ impl ParseError {
 
     /// A debugging description of the error.
     pub fn desc(&self) -> &'static str {
-        self.desc
+        self.desc.as_str()
+    }
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.desc)
+    }
+}
+
+#[cfg(feature = "std")]
+impl ::std::error::Error for ParseError {}
+
+impl From<crate::escape::UnescapeError> for ParseError {
+    fn from(error: crate::escape::UnescapeError) -> Self {
+        Self {
+            span: Some(error.index..error.index + 1),
+            desc: ParseErrorKind::EncodingError(error),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+enum ParseErrorKind {
+    /// Bad percent encoding or illegal characters
+    EncodingError(crate::escape::UnescapeError),
+    /// Missing scheme or authority
+    MissingSchemeOrAuthority,
+    /// Cannot find URI components
+    MissingUriComponents,
+    /// Invalid URI scheme
+    InvalidUriScheme,
+    /// Not a URI
+    InvalidUri,
+    #[allow(dead_code)]
+    Custom { desc: &'static str },
+}
+
+impl From<&'static str> for ParseErrorKind {
+    fn from(desc: &'static str) -> Self {
+        match desc {
+            "Missing scheme or authority" => Self::MissingSchemeOrAuthority,
+            "Cannot find URI components" => Self::MissingUriComponents,
+            "Invalid URI scheme" => Self::InvalidUriScheme,
+            "Not a URI" => Self::InvalidUri,
+            _ => Self::Custom { desc },
+        }
+    }
+}
+
+impl ParseErrorKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::EncodingError(_) => "Bad percent encoding or illegal characters",
+            Self::MissingSchemeOrAuthority => "Missing scheme or authority",
+            Self::MissingUriComponents => "Cannot find URI components",
+            Self::InvalidUriScheme => "Invalid URI scheme",
+            Self::InvalidUri => "Not a URI",
+            Self::Custom { desc } => desc,
+        }
+    }
+}
+
+impl fmt::Display for ParseErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Self::EncodingError(e) = &self {
+            write!(f, "{}", e)
+        } else {
+            write!(f, "{}", self.as_str())
+        }
     }
 }

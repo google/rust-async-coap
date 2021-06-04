@@ -134,10 +134,7 @@ impl<'a> UriRawComponents<'a> {
     /// to contain a URI-reference.
     pub fn from_str(uri: &'a str) -> Result<UriRawComponents<'a>, ParseError> {
         if let Some(i) = uri.unescape_uri().first_error() {
-            return Err(ParseError::new(
-                "Bad percent encoding or illegal characters",
-                Some(i..i + 1),
-            ));
+            return Err(ParseError::from(i));
         }
 
         let captures = match RFC3986_APPENDIX_B.captures(uri) {

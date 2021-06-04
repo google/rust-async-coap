@@ -88,10 +88,7 @@ impl RelRefBuf {
     /// Attempts to create a new [`RelRefBuf`] from a [`String`].
     pub fn from_string(s: String) -> Result<RelRefBuf, ParseError> {
         if let Some(first_error) = s.as_str().unescape_uri().first_error() {
-            Err(ParseError::new(
-                "Bad percent encoding or illegal characters",
-                Some(first_error..s.len()),
-            ))
+            return Err(ParseError::from(first_error));
         } else {
             let mut ret = unsafe { Self::from_string_unchecked(s) };
 
