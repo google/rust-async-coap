@@ -1,0 +1,7 @@
+error: unescaped space
+ --> $DIR/space.rs:7:25
+  |
+7 |     assert_uri_literal!("https://www.example.com/a/ /c");
+  |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

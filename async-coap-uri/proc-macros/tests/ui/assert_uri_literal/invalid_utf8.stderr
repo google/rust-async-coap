@@ -1,0 +1,7 @@
+error: invalid utf8
+ --> $DIR/invalid_utf8.rs:7:25
+  |
+7 |     assert_uri_literal!("https://www.example.com/%aa%FF/b/c");
+  |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

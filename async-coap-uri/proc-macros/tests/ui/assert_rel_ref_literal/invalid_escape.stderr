@@ -1,0 +1,7 @@
+error: the 2 char after '%' must be valid hex character
+ --> $DIR/invalid_escape.rs:7:29
+  |
+7 |     assert_rel_ref_literal!("https://www.example.com/a/%:A/c");
+  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

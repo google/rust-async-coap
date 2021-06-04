@@ -1,0 +1,7 @@
+error: ascii control chars are forbidden for security reasons
+ --> $DIR/escaped_ascii_control.rs:7:29
+  |
+7 |     assert_rel_ref_literal!("https://www.example.com/a/%00/c");
+  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
