@@ -120,7 +120,7 @@ impl<IC: InboundContext> ResponseTracker<IC> for UdpResponseTracker<IC> {
         //       It feels like there must be a different way, but after 8+ hours of lifetime hell
         //       I couldn't figure it out.
         let handler: Arc<Mutex<dyn HandleResponse<IC>>> = unsafe { std::mem::transmute(handler) };
-        println!(
+        log::info!(
             "Adding response handler: msg_id:{:04X}, msg_token:{}",
             msg_id, msg_token
         );
