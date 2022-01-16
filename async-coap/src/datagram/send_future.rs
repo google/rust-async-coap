@@ -189,7 +189,7 @@ where
         // We always control the msg_id.
         builder.set_msg_id(self.msg_id.get());
 
-        println!("OUTBOUND: {} {}", self.dest, builder);
+        log::info!("OUTBOUND: {} {}", self.dest, builder);
 
         let buffer: &[u8] = &builder;
 
@@ -203,11 +203,11 @@ where
             .expect("send_to blocked")
             .err()
         {
-            println!("send_to: io error: {:?} (dest={:?})", e, self.dest);
+            log::warn!("send_to: io error: {:?} (dest={:?})", e, self.dest);
             return Err(Error::IOError);
         }
 
-        println!("Did transmit.");
+        log::info!("Did transmit.");
 
         self.retransmit_count.set(0);
 
@@ -236,7 +236,7 @@ where
 
         builder.set_msg_id(self.msg_id.get());
 
-        println!(
+        log::info!(
             "OUTBOUND[{}]: {} {}",
             self.retransmit_count.get() + 1,
             self.dest,
@@ -255,13 +255,13 @@ where
             .expect("send_to blocked")
             .err()
         {
-            println!("send_to: io error: {:?} (dest={:?})", e, self.dest);
+            log::warn!("send_to: io error: {:?} (dest={:?})", e, self.dest);
             return Err(Error::IOError);
         }
 
         self.retransmit_count.set(self.retransmit_count.get() + 1);
 
-        println!("Did retransmit, count {}", self.retransmit_count.get());
+        log::info!("Did retransmit, count {}", self.retransmit_count.get());
 
         Ok(())
     }
@@ -293,7 +293,7 @@ where
                 && message.msg_code().is_empty()
                 && message.msg_type().is_ack()
             {
-                println!("Got ack!");
+                log::info!("Got ack!");
 
                 self.change_state(UdpSendFutureState::PassivelyWaiting);
                 let d = self.send_desc.max_rtt();
@@ -474,7 +474,7 @@ where
         let inner = match self.inner.lock() {
             Ok(guard) => guard,
             Err(poisoned) => {
-                eprintln!("UdpSendFuture mutex inner was poisoned, locking anyway to drop");
+                log::error!("UdpSendFuture mutex inner was poisoned, locking anyway to drop");
                 poisoned.into_inner()
             }
         };

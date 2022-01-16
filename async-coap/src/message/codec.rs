@@ -116,12 +116,12 @@ pub fn encode_option_without_value(
 
     let calc_len = calc_option_size(prev_key, key, value_len);
     if calc_len > buffer.len() {
-        eprintln!("calc_len:{}, blen:{}", calc_len, buffer.len());
+        log::warn!("calc_len:{}, blen:{}", calc_len, buffer.len());
         return Err(Error::OutOfSpace);
     }
 
     if value_len > MAX_OPTION_VALUE_SIZE {
-        eprintln!("value_len:{}, max:{}", value_len, MAX_OPTION_VALUE_SIZE);
+        log::warn!("value_len:{}, max:{}", value_len, MAX_OPTION_VALUE_SIZE);
         return Err(Error::InvalidArgument);
     }
 
@@ -268,7 +268,7 @@ pub fn insert_option(
 
     // Do a space check before we start trying to move buffers around.
     if len + adj_size > buffer.len() {
-        println!(
+        log::warn!(
             "len:{} + adj_size:{} > blen:{}",
             len,
             adj_size,
